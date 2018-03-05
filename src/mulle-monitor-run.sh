@@ -205,15 +205,37 @@ _process_event()
    local _patternfile
 
    #
-   # not as cheap
+   # not as cheap. If mulle-match is our script stuff, it's too expensive
+   # to fork this everytime. We use it as a library.
    #
-   if ! _match_filepath "${ignore}" "${match}" "${filepath}"
-   then
-      return 1
-   fi
+   case "${MULLE_MATCH}" in
+      */mulle-match)
+         if [ -z "${MULLE_MATCH_MATCH_SH}" ]
+         then
+            MULLE_MATCH_LIBEXEC_DIR="`mulle-match libexec-dir`" || exit 1
 
-   _callback="`patternfile_get_callback "${_patternfile}" `"
-   _category="`patternfile_get_category "${_patternfile}" `"
+            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-environment.sh" || exit 1
+            match_environment
+
+            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
+         fi
+
+         if ! _match_filepath "${ignore}" "${match}" "${filepath}"
+         then
+            return 1
+         fi
+      ;;
+
+      *)
+         if ! _patternfile="`${MULLE_MATCH} "${ignore}" "${match}" "${filepath}"`"
+         then
+            return 1
+         fi
+      ;;
+   esac
+
+   _callback="${_patternfile%%-*}"
+   _category="${_patternfile}##*--}"
 
    [ -z "${_callback}" ] && internal_fail "_callback is empty"
 
@@ -604,11 +626,11 @@ monitor_run_main()
    local match
 
    _patternfilefunctions_passing_filter "${MULLE_MONITOR_IGNORE_DIR}" \
-                                 "${OPTION_IGNORE_FILTER}"
+                                        "${OPTION_IGNORE_FILTER}"
    ignore="${_cache}"
 
    _patternfilefunctions_passing_filter "${MULLE_MONITOR_MATCH_DIR}" \
-                                 "${OPTION_MATCH_FILTER}"
+                                        "${OPTION_MATCH_FILTER}"
    match="${_cache}"
 
    #

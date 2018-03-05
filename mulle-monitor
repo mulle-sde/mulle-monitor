@@ -54,10 +54,7 @@ SHOWN_COMMANDS="\
    run            : monitor files and run scripts"
 
 HIDDEN_COMMANDS="\
-   clean          : remove var/run files
-   find           : find files that match patternfiles
    libexec-dir    : print path to mulle-monitor libexec
-   match          : match filenames against patternfiles
    uname          : mulle-monitors simplified uname(1)"
 
 
@@ -80,7 +77,6 @@ print_hidden_flags()
    echo "   -id <dir>      : set MULLE_MONITOR_IGNORE_DIR"
    echo "   -md <dir>      : set MULLE_MONITOR_MATCH_DIR"
    echo "   -ed <dir>      : set MULLE_MONITOR_ETC_DIR"
-
 }
 
 
@@ -337,6 +333,9 @@ pass the -e flag"
 
    MULLE_EXECUTABLE_OPTIONS="$@"
 
+   MULLE_MATCH="`command -v "${MULLE_MATCH:-mulle-match}"`"
+   [ -z "${MULLE_MATCH}" ] && fail "mulle-match is missing"
+
    monitor_environment
 
    case "${cmd}" in
@@ -360,27 +359,6 @@ pass the -e flag"
 
       libexec-dir|library-path)
          echo "${MULLE_MONITOR_LIBEXEC_DIR}"
-      ;;
-
-      match)
-         # shellcheck source=src/mulle-monitor-match.sh
-         . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-match.sh"
-
-         monitor_match_main "$@"
-      ;;
-
-      find)
-         # shellcheck source=src/mulle-monitor-run.sh
-         . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-find.sh"
-
-         monitor_find_main "$@"
-      ;;
-
-      patternfile)
-         # shellcheck source=src/mulle-monitor-patternfile.sh
-         . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-patternfile.sh"
-
-         monitor_patternfile_main "$@"
       ;;
 
       run)
