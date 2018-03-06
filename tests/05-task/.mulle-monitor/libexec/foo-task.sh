@@ -1,4 +1,4 @@
-task_foo_main()
+foo_task_run()
 {
    :
 }

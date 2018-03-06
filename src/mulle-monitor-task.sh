@@ -56,7 +56,7 @@ Commands:
    uninstall  : uninstall a task
    test       : load task and check that the required main function is present
    run        : run task
-   status    : get status of running or last ran task
+   status     : get status of running or last ran task
 EOF
    exit 1
 }
@@ -225,7 +225,9 @@ EOF
 }
 
 
-
+#
+#
+#
 _cheap_help_options()
 {
    local usage="$1"
@@ -274,9 +276,9 @@ _task_pidfile()
 #
 # return in _functionname
 #
-__task_run_functionname()
+__task_get_entry_functionname()
 {
-   log_entry "__task_run_functionname" "$@"
+   log_entry "__task_get_entry_functionname" "$@"
 
    local task="$1"
 
@@ -349,7 +351,6 @@ _load_task()
    log_entry "_load_task" "$@"
 
    local task="$1"
-   local functionname="$2"
 
    local _plugin
 
@@ -359,26 +360,23 @@ _load_task()
    fi
 
    . "${_plugin}" || exit 1
-
-   if [ "`type -t "${functionname}"`" != "function" ]
-   then
-      fail "\"${_plugin}\" does not define function \"${functionname}\""
-   fi
 }
 
 
-_require_task()
+__require_task()
 {
-   log_entry "_require_task" "$@"
+   log_entry "__require_task" "$@"
 
    local task="$1"
 
-   local _functionname
-
-   __task_run_functionname "${task}"
+   __task_get_entry_functionname "${task}"
    if [ "`type -t "${_functionname}"`" != "function" ]
    then
-      _load_task "${task}" "${_functionname}"
+      _load_task "${task}"
+   fi
+   if [ "`type -t "${_functionname}"`" != "function" ]
+   then
+      fail "\"${_plugin}\" does not define function \"${_functionname}\""
    fi
 }
 
@@ -445,13 +443,17 @@ add_task_job()
       darwin)
          log_fluff "==> Scheduled task \"${task}\" for" `date -r ${timestamp} "+%H:%M:%S"`
       ;;
+
+      *)
+         log_fluff "==> Scheduled task \"${task}\" for" `date --date=@${timestamp} "+%H:%M:%S"`
+      ;;
    esac
 
    (
       trap 'log_fluff "Task \"${task}\" with pid ${BASHPID} killed" ; exit 1' TERM
 
       announce_current_pid "${taskpidfile}"
-      sleep "${taskdelay}"
+      exekutor sleep "${taskdelay}"
 
       log_fluff "==> Starting task"
 
@@ -474,8 +476,7 @@ run_task_job()
 
    local _functionname
 
-   _require_task "${task}" || exit 1
-   __task_run_functionname "${task}"
+   __require_task "${task}" || exit 1
 
    #
    # check that a task of same name is not running/schedulded. If yes
@@ -484,7 +485,15 @@ run_task_job()
    # Delay task schedule by 1 second, so that we can "coalesce"
    # incoming events
    #
-   add_task_job "${task}" "1" "'${_functionname}'" "$@"
+   case "${UNAME}" in
+      linux)
+         add_task_job "${task}" "1" "'${_functionname}'" "$@"
+      ;;
+
+      darwin)
+         add_task_job "${task}" "0.3s" "'${_functionname}'" "$@"
+      ;;
+   esac
 }
 
 
@@ -502,11 +511,9 @@ run_task_main()
 
    taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
 
-   _require_task "${task}" || exit 1
-
    local _functionname
 
-   __task_run_functionname "${task}" # get it in _functionname back
+   __require_task "${task}" || exit 1
 
    local taskpidfile
 
@@ -642,7 +649,9 @@ test_task_main()
 
    [ "$#" -lt 1 ] && test_task_usage
 
-   _require_task "$@"
+   local _functionname
+
+   __require_task "$@"
 }
 
 

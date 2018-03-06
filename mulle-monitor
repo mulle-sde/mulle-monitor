@@ -336,6 +336,8 @@ pass the -e flag"
    MULLE_MATCH="`command -v "${MULLE_MATCH:-mulle-match}"`"
    [ -z "${MULLE_MATCH}" ] && fail "mulle-match is missing"
 
+   local rval
+
    monitor_environment
 
    case "${cmd}" in
@@ -377,6 +379,7 @@ pass the -e flag"
 
       uname)
          echo "${UNAME}"
+         return 0
       ;;
 
       version)
@@ -434,7 +437,7 @@ _init()
 
    local _libexec_dir
 
-   _get_libexec_dir "$0" "mulle-monitor" "mulle-monitor-match.sh"
+   _get_libexec_dir "$0" "mulle-monitor" "mulle-monitor-run.sh"
 
    MULLE_MONITOR_LIBEXEC_DIR="${_libexec_dir}"
 

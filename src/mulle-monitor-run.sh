@@ -210,15 +210,8 @@ _process_event()
    #
    case "${MULLE_MATCH}" in
       */mulle-match)
-         if [ -z "${MULLE_MATCH_MATCH_SH}" ]
-         then
-            MULLE_MATCH_LIBEXEC_DIR="`mulle-match libexec-dir`" || exit 1
 
-            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-environment.sh" || exit 1
-            match_environment
-
-            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
-         fi
+         . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
 
          if ! _match_filepath "${ignore}" "${match}" "${filepath}"
          then
@@ -227,15 +220,21 @@ _process_event()
       ;;
 
       *)
-         if ! _patternfile="`${MULLE_MATCH} "${ignore}" "${match}" "${filepath}"`"
+
+         if ! _patternfile="`"${MULLE_MATCH}" --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
+                                              --match-dir "${MULLE_MONITOR_MATCH_DIR}" \
+                                              --ignore-filter "${OPTION_IGNORE_FILTER}" \
+                                              --match-filter "${OPTION_MATCH_FILTER}" \
+                                              "${filepath}" `"
          then
             return 1
          fi
       ;;
    esac
 
-   _callback="${_patternfile%%-*}"
-   _category="${_patternfile}##*--}"
+   _callback="${_patternfile%%--*}"
+   _callback="${_callback#*-}"
+   _category="${_patternfile##*--}"
 
    [ -z "${_callback}" ] && internal_fail "_callback is empty"
 
@@ -424,33 +423,38 @@ watch_using_inotifywait()
 }
 
 
-_cleanup_monitor()
+cleanup_monitor()
 {
-   log_entry "cleanup" "$@"
+   log_entry "cleanup_monitor" "$@"
 
-   if [ -f "${MONITOR_PIDFILE}" ]
+   local killnowait="$1"
+
+   if [ "${killnowait}" = "YES" ]
    then
-      log_fluff "==> Cleanup"
-
+      log_fluff "==> Kill jobs"
       local job
 
       for job in `jobs -pr`
       do
          kill $job
       done
+   else
+      log_fluff "==> Wait for jobs"
 
-      rm "${MONITOR_PIDFILE}" 2> /dev/null
+      wait
    fi
+
+   remove_file_if_present "${MONITOR_PIDFILE}"
 
    log_fluff "==> Exit"
 }
 
 
-cleanup_monitor()
+kill_monitor()
 {
-   log_entry "cleanup" "$@"
+   log_entry "kill_monitor" "$@"
 
-   _cleanup_monitor "$@"
+   cleanup_monitor "YES"
    exit 1
 }
 
@@ -475,7 +479,7 @@ prevent_superflous_monitor()
       rm "${TEST_JOB_PIDFILE}" 2> /dev/null
    fi
 
-   trap cleanup_monitor 2 3
+   trap kill_monitor 2 3
    announce_pid $$ "${MONITOR_PIDFILE}"
 }
 
@@ -569,16 +573,6 @@ monitor_run_main()
       # shellcheck source=src/mulle-monitor-process.sh
       . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-process.sh" || exit 1
    fi
-   if [ -z "${MULLE_MONITOR_MATCH_SH}" ]
-   then
-      # shellcheck source=src/mulle-monitor-match.sh
-      . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-match.sh" || exit 1
-   fi
-   if [ -z "${MULLE_MONITOR_FIND_SH}" ]
-   then
-      # shellcheck source=src/mulle-monitor-find.sh
-      . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-find.sh" || exit 1
-   fi
    if [ -z "${MULLE_MONITOR_CALLBACK_SH}" ]
    then
       # shellcheck source=src/mulle-monitor-callback.sh
@@ -620,6 +614,16 @@ monitor_run_main()
    log_fluff "Edits in your directory \"${PROJECT_DIR}\" are now monitored."
 
    log_info "Monitor is running. [CTRL]-[C] to quit"
+
+   if [ -z "${MULLE_MATCH_MATCH_SH}" ]
+   then
+      MULLE_MATCH_LIBEXEC_DIR="`mulle-match libexec-dir`" || exit 1
+
+      . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-environment.sh" || exit 1
+      match_environment "${MULLE_MONITOR_DIR}"
+
+      . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
+   fi
 
    local _cache
    local ignore
@@ -663,5 +667,5 @@ monitor_run_main()
       ;;
    esac
 
-   _cleanup_monitor
+   cleanup_monitor
 }

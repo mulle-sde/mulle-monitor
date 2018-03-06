@@ -17,10 +17,10 @@ LANGUAGE="bash"             # c,cpp, objc, bash ...
 # DEPENDENCIES and BUILD_DEPENDENCIES will be evaled later!
 # So keep them single quoted.
 #
-DEPENDENCIES='${TOOLS_TAP}mulle-bashfunctions
+DEPENDENCIES='${TOOLS_TAP}mulle-fetch
 fswatch
 '
 
-DEBIAN_DEPENDENCIES="ifnotifywait,mulle-bashfunctions"
+DEBIAN_DEPENDENCIES="ifnotifywait,mulle-fetch"
 
 

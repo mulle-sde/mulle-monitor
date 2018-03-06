@@ -39,6 +39,8 @@ expect_failure_mulle_monitor()
    if result="`run_mulle_monitor "$@"`"
    then
       fail "Did not fail unexpectedly"
+   else
+      log_info "Failed as expected"
    fi
 }
 
@@ -69,13 +71,13 @@ main()
 
    #-----------
 
-   expect_mulle_monitor "" -e task require foo
+   expect_mulle_monitor "" -e task test foo
 
    log_verbose "----- #4 PASSED -----"
 
    #-----------
 
-   expect_failure_mulle_monitor -e task require bar
+   expect_failure_mulle_monitor -e task test bar
 
    log_verbose "----- #5 PASSED -----"
 
