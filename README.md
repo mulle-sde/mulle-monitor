@@ -79,8 +79,8 @@ forwarded to the callback:
 mulle-monitor -e patternfile install --category special hello pattern.txt
 ```
 
-It may be useful, especially in conjunction with `mulle-monitor find`, 
-that `mulle-monitor` may ignore large and changing folders like `.git` and 
+It may be useful, especially in conjunction with `mulle-monitor find`,
+that `mulle-monitor` may ignore large and changing folders like `.git` and
 `build`. Install into the `ignore.d` folder with `-i`:
 
 ```

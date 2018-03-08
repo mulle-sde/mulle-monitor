@@ -334,28 +334,6 @@ watch_using_fswatch()
 }
 
 
-_remove_quotes()
-{
-   LC_ALL=C sed 's/^\"\([^"]*\)\"/\1/' <<< "${1}"
-}
-
-
-_extract_first_field_from_line()
-{
-   case "${_line}" in
-      \"*)
-         _field="`LC_ALL=C sed 's/^\"\([^"]*\)\",\(.*\)/\1/' <<< "${_line}" `"
-         _line="` LC_ALL=C sed 's/^\"\([^"]*\)\",\(.*\)/\2/' <<< "${_line}" `"
-      ;;
-
-      *)
-         _field="`LC_ALL=C sed 's/^\([^,]*\),\(.*\)/\1/' <<< "${_line}" `"
-         _line="` LC_ALL=C sed 's/^\([^,]*\),\(.*\)/\2/' <<< "${_line}" `"
-      ;;
-   esac
-}
-
-
 _watch_using_inotifywait()
 {
    log_entry "_watch_using_inotifywait" "$@"
@@ -381,11 +359,40 @@ _watch_using_inotifywait()
 
       log_debug "${_line}"
 
-      _extract_first_field_from_line
-      directory="${_field}"
-      _extract_first_field_from_line
-      cmd="${_field}"
-      filename="`_remove_quotes "${_line}" `"
+      case "${_line}" in
+         \"*)
+            directory="${_line%%\",*}"  # not perfect but ..
+            directory="${directory:1}"
+            _line="${_line#*\",}"
+         ;;
+
+         *)
+            directory="${_line%%,*}"  # not perfect but ..
+            _line="${_line#*,}"
+         ;;
+      esac
+
+      case "${_line}" in
+         \"*)
+            cmd="${_line%%\",*}"  # not perfect but ..
+            cmd="${cmd:1}"
+            _line="${_line#*\",}"
+         ;;
+
+         *)
+            cmd="${_line%%,*}"  # not perfect but ..
+            _line="${_line#*,}"
+         ;;
+      esac
+
+      # remove quotes
+      filename="${_line}"
+      case "${filename}" in
+         \"*\")
+            filename="${filename:1}"
+            filename="${filename%?}"
+         ;;
+      esac
 
       _filepath="` filepath_concat "${directory}" "${filename}" `"
 

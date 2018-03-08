@@ -426,7 +426,9 @@ add_task_job()
    log_entry "add_task_job" "$@"
 
    local task="$1" ; shift
+   local sleepexe="$1"; shift
    local taskdelay="$1" ; shift
+
    # rest commandline
 
    local taskpidfile
@@ -437,15 +439,16 @@ add_task_job()
    local timestamp
 
    timestamp="`date +"%s"`"
-   timestamp="`expr $timestamp + ${taskdelay}`"
+   timestamp="`expr $timestamp + ${taskdelay%.*}`"
+   timestamp="`expr $timestamp + 1`"  # close to that date...
 
    case "${MULLE_UNAME}" in
       darwin)
-         log_fluff "==> Scheduled task \"${task}\" for" `date -r ${timestamp} "+%H:%M:%S"`
+         log_fluff "==> Scheduled task \"${task}\" for" `exekutor date -r ${timestamp} "+%H:%M:%S"`
       ;;
 
       *)
-         log_fluff "==> Scheduled task \"${task}\" for" `date --date=@${timestamp} "+%H:%M:%S"`
+         log_fluff "==> Scheduled task \"${task}\" for" `exekutor date --date=@${timestamp} "+%H:%M:%S"`
       ;;
    esac
 
@@ -453,7 +456,7 @@ add_task_job()
       trap 'log_fluff "Task \"${task}\" with pid ${BASHPID} killed" ; exit 1' TERM
 
       announce_current_pid "${taskpidfile}"
-      exekutor sleep "${taskdelay}"
+      exekutor "${sleepexe}" "${taskdelay}"
 
       log_fluff "==> Starting task"
 
@@ -486,12 +489,12 @@ run_task_job()
    # incoming events
    #
    case "${UNAME}" in
-      linux)
-         add_task_job "${task}" "1" "'${_functionname}'" "$@"
+      linux|darwin)
+         add_task_job "${task}" sleep "0.3s" "'${_functionname}'" "$@"
       ;;
 
-      darwin)
-         add_task_job "${task}" "0.3s" "'${_functionname}'" "$@"
+      *)
+         add_task_job "${task}" sleep "1" "'${_functionname}'" "$@"
       ;;
    esac
 }
