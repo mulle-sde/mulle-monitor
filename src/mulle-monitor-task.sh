@@ -49,11 +49,11 @@ Usage:
 
 Commands:
    cat        : print the task script to stdout
-   install    : install a bash script as a task
+   add        : install a bash script as a task
    kill       : kill a running task
    list       : list installed tasks
    ps         : list running tasks
-   uninstall  : uninstall a task
+   remove     : remove a task
    test       : load task and check that the required main function is present
    run        : run task
    status     : get status of running or last ran task
@@ -62,7 +62,7 @@ EOF
 }
 
 
-install_task_usage()
+add_task_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -71,7 +71,7 @@ install_task_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} task install <task> <script>
+   ${MULLE_USAGE_NAME} task add <task> <script>
 
    Install a sourceable bash script as a mulle-sde task. You may specify '-' as
    to read it from stdin.
@@ -80,7 +80,7 @@ EOF
 }
 
 
-uninstall_task_usage()
+remove_task_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -89,7 +89,7 @@ uninstall_task_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} task uninstall <task>
+   ${MULLE_USAGE_NAME} task remove <task>
 
    Remove a task.
 EOF
@@ -363,6 +363,32 @@ _load_task()
 }
 
 
+__require_filename()
+{
+   log_entry "__require_filename" "$@"
+
+   local task="$1"
+   local filename="$2"
+
+   [ -f "${filename}" ] || fail "\"${filename}\" does not exist"
+
+   (
+      local _functionname
+
+      __task_get_entry_functionname "${task}"
+
+      unset -f "${_functionname}"
+
+      . "${filename}" 2> /dev/null || fail "\"${filename}\" is not a valid bash script"
+
+      if [ "`type -t "${_functionname}"`" != "function" ]
+      then
+         fail "\"${filename}\" does not define function \"${_functionname}\""
+      fi
+   ) || exit 1
+}
+
+
 __require_task()
 {
    log_entry "__require_task" "$@"
@@ -548,27 +574,28 @@ cat_task_main()
 }
 
 
-install_task_main()
+add_task_main()
 {
-   log_entry "install_task_main" "$@"
+   log_entry "add_task_main" "$@"
 
-   _cheap_help_options "install_task_usage"
+   _cheap_help_options "add_task_usage"
 
-   [ "$#" -ne 2 ] && install_task_usage
+   [ "$#" -ne 2 ] && add_task_usage
 
    local task="$1"
    local filename="$2"
 
-   [ -z "${task}" ] && install_task_usage "Empty task"
-   [ -z "${filename}" ] && install_task_usage "missing filename"
-   [ "${filename}" = "-" -o -f "${filename}" ] || fail "\"${filename}\" not found"
+   [ -z "${task}" ] && add_task_usage "Empty task"
+   [ -z "${filename}" ] && add_task_usage "missing filename"
 
    local _plugin
 
-   _task_plugin_install_ilename "${task}"
+   _task_plugin_install_filename "${task}"
 
    [ -e "${_plugin}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = "NO" ] \
       && fail "\"${_plugin}\" already exists. Use -f to clobber"
+
+   __require_filename "${task}" "${filename}"
 
    local plugindir
 
@@ -590,14 +617,13 @@ install_task_main()
 }
 
 
-uninstall_task_main()
+remove_task_main()
 {
-   log_entry "uninstall_task_main" "$@"
+   log_entry "remove_task_main" "$@"
 
+   _cheap_help_options "remove_task_usage"
 
-   _cheap_help_options "uninstall_task_usage"
-
-   [ "$#" -ne 1 ] && uninstall_task_usage
+   [ "$#" -ne 1 ] && remove_task_usage
 
    local task="$1"
 
@@ -801,7 +827,7 @@ monitor_task_main()
    [ $# -ne 0 ] && shift
 
    case "${cmd}" in
-      cat|install|kill|list|locate|ps|run|status|test|uninstall)
+      add|cat|kill|list|locate|ps|run|status|test|remove)
          ${cmd}_task_main "$@"
       ;;
 

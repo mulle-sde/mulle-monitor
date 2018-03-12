@@ -34,10 +34,7 @@ MULLE_MONITOR_RUN_SH="included"
 
 monitor_run_usage()
 {
-   if [ "$#" -ne 0 ]
-   then
-      log_error "$*"
-   fi
+   [ "$#" -ne 0 ] && log_error "$*"
 
    cat <<EOF >&2
 Usage:

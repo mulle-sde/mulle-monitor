@@ -1,3 +1,8 @@
+## 0.4.0
+
+* make secondary command set more uniform across mulle-sde tools
+
+
 ### 0.3.4
 
 * build CMakeLists.txt CMakePackage.cmake dox install.sh LICENSE mulle-monitor mulle-monitor.graffle mulle-monitor.png mulle-monitor.sublime-project mulle-monitor.sublime-workspace mulle-project README.md RELEASENOTES.md src tests tmp.0TzfdmXk tmp.1InwGGbY tmp.1Of0mhck tmp.6IxH9i3i tmp.90TuSlAk tmp.DVmRIPC5 tmp.HbdjIHtw tmp.lXYv2HQt tmp.wM9ySHfc fix for linux, use less backticks

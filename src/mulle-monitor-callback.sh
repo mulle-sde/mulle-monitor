@@ -41,7 +41,7 @@ monitor_callback_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} callback [options] <command> <type> ...
+   ${MULLE_USAGE_NAME} callback <command>
 
    A callback is executed, when there has been an interesting change in the
    filesystem. These changes are categorized by "patternfile"s and
@@ -50,21 +50,18 @@ Usage:
    perform. See \`${MULLE_USAGE_NAME} task help\` and
    \`${MULLE_USAGE_NAME} patternfile help\` for more information.
 
-Options:
-   -h        : this help
-
 Commands:
-   cat <callback> : print callback to stdout (hopefully its not binary)
-   install        : install a callback
-   list           : list installed callbacks
-   uninstall      : uninstall a callback
-   run            : run a callback
+   cat       : print callback to stdout (hopefully its not binary)
+   add       : install a callback
+   list      : list installed callbacks
+   remove    : remove a callback
+   run       : run a callback
 EOF
    exit 1
 }
 
 
-install_callback_usage()
+add_callback_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -73,7 +70,7 @@ install_callback_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} callback install [options] <callback> <executable>
+   ${MULLE_USAGE_NAME} callback add [options] <callback> <executable>
 
    Install an executable as a mulle-sde callback.
 EOF
@@ -81,7 +78,7 @@ EOF
 }
 
 
-uninstall_callback_usage()
+remove_callback_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -90,7 +87,7 @@ uninstall_callback_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} callback uninstall <callback>
+   ${MULLE_USAGE_NAME} callback remove <callback>
 
    Remove callback.
 
@@ -239,13 +236,13 @@ _cheap_help_options()
 }
 
 
-uninstall_callback_main()
+remove_callback_main()
 {
-   log_entry "uninstall_callback_main" "$@"
+   log_entry "remove_callback_main" "$@"
 
-   _cheap_help_options "uninstall_callback_usage"
+   _cheap_help_options "remove_callback_usage"
 
-   [ "$#" -ne 1 ] && uninstall_callback_usage
+   [ "$#" -ne 1 ] && remove_callback_usage
 
    local callback="$1"
 
@@ -263,13 +260,13 @@ uninstall_callback_main()
 }
 
 
-install_callback_main()
+add_callback_main()
 {
-   log_entry "install_callback_main" "$@"
+   log_entry "add_callback_main" "$@"
 
-   _cheap_help_options "install_callback_usage"
+   _cheap_help_options "add_callback_usage"
 
-   [ "$#" -ne 2 ] && install_callback_usage
+   [ "$#" -ne 2 ] && add_callback_usage
 
    local callback="$1"
    local filename="$2"
@@ -430,7 +427,7 @@ monitor_callback_main()
    [ $# -ne 0 ] && shift
 
    case "${cmd}" in
-      list|locate|run|install|uninstall)
+      list|locate|run|add|remove)
          ${cmd}_callback_main "$@"
       ;;
 
