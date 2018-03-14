@@ -1,3 +1,7 @@
+### 0.4.1
+
+* update dox
+
 ## 0.4.0
 
 * make secondary command set more uniform across mulle-sde tools
