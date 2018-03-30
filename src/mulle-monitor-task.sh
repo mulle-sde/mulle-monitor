@@ -514,7 +514,7 @@ run_task_job()
    # Delay task schedule by 1 second, so that we can "coalesce"
    # incoming events
    #
-   case "${UNAME}" in
+   case "${MULLE_UNAME}" in
       linux|darwin)
          add_task_job "${task}" sleep "0.3s" "'${_functionname}'" "$@"
       ;;
@@ -823,16 +823,12 @@ monitor_task_main()
    _cheap_help_options "monitor_task_usage"
 
 
-   local cmd="$1"
+   local cmd="${1:-list}"
    [ $# -ne 0 ] && shift
 
    case "${cmd}" in
       add|cat|kill|list|locate|ps|run|status|test|remove)
          ${cmd}_task_main "$@"
-      ;;
-
-      "")
-         monitor_task_usage
       ;;
 
       *)

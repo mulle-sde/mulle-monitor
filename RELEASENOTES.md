@@ -1,3 +1,7 @@
+### 0.4.2
+
+* use `MULLE_UNAME` pervasively
+
 ### 0.4.1
 
 * update dox

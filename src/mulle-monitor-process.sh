@@ -62,7 +62,7 @@ does_pid_exist()
 
    local found
 
-   case "${UNAME}" in
+   case "${MULLE_UNAME}" in
       *)
          found="`ps -xef | grep "${pid}" | grep -v grep`"
       ;;

@@ -46,16 +46,17 @@ Usage:
    A callback is executed, when there has been an interesting change in the
    filesystem. These changes are categorized by "patternfile"s and
    are used to determine the callback to execute.
-   A callback may return string, which will be interpreted as a "task" to
+   A callback may return a string, which will be interpreted as a "task" to
    perform. See \`${MULLE_USAGE_NAME} task help\` and
    \`${MULLE_USAGE_NAME} patternfile help\` for more information.
 
 Commands:
-   cat       : print callback to stdout (hopefully its not binary)
+   cat       : print callback to stdout (hopefully it is readable)
    add       : install a callback
-   list      : list installed callbacks
+   list      : list installed callbacks (default)
    remove    : remove a callback
    run       : run a callback
+
 EOF
    exit 1
 }
@@ -423,16 +424,12 @@ monitor_callback_main()
    #
    _cheap_help_options "monitor_callback_usage"
 
-   local cmd="$1"
+   local cmd="${1:-list}"
    [ $# -ne 0 ] && shift
 
    case "${cmd}" in
       list|locate|run|add|remove)
          ${cmd}_callback_main "$@"
-      ;;
-
-      "")
-         monitor_callback_usage
       ;;
 
       *)
