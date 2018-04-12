@@ -1,3 +1,7 @@
+### 0.4.3
+
+* fix bug with `_match_filepath`
+
 ### 0.4.2
 
 * use `MULLE_UNAME` pervasively

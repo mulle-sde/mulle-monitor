@@ -210,7 +210,9 @@ _process_event()
 
          . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
 
-         if ! _match_filepath "${ignore}" "${match}" "${filepath}"
+         # returns 0,1,2
+         _match_filepath "${ignore}" "${match}" "${filepath}"
+         if [ $? -eq 1 ]
          then
             return 1
          fi
