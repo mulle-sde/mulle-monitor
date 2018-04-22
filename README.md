@@ -34,107 +34,6 @@ Executable      | Description
 ## Commands
 
 
-### mulle-monitor patternfile
-
-A *patternfile* is made up of one or more *patterns*. It is quite like a
-`.gitignore` file, with the same semantics for negation.
-
-
-Example:
-
-```
-# match .c .h and .cpp files
-*.c
-*.h
-*.cpp
-
-# ignore backup files though
-!*~.*
-```
-
-A *patternfile* resides in either the `ignore.d` folder or the `match.d`
-folder.
-
-![](dox/mulle-monitor-match.png)
-
-If a *patternfile* of the `ignore.d` folder matches, the matching has failed.
-On the other hand, if a *patternfile* of the `match.d` folder matches, the
-matching has succeeded. *patternfiles* are matched in sort order of their
-filename.
-
-> The [Wiki](https://github.com/mulle-sde/mulle-monitor/wiki)
-> explains this in much more detail.
-
-Add a *patternfile* to select the *callback* "hello" for PNG files:
-
-```
-echo "*.png" > pattern.txt
-mulle-monitor -e patternfile install hello pattern.txt
-```
-
-You can optionally specify a *category* for the patternfile, which will be
-forwarded to the callback:
-
-```
-mulle-monitor -e patternfile install --category special hello pattern.txt
-```
-
-It may be useful, especially in conjunction with `mulle-monitor find`,
-that `mulle-monitor` may ignore large and changing folders like `.git` and
-`build`. Install into the `ignore.d` folder with `-i`:
-
-```
-echo ".git/" > pattern.txt
-echo "build/" >> pattern.txt
-mulle-monitor -e patternfile install -i folders pattern.txt
-```
-
-
-Remove a *patternfile*:
-
-```
-mulle-monitor -e patternfile uninstall hello
-```
-
-List all *patternfiles*:
-
-```
-mulle-monitor -e patternfile list
-```
-
-> Note: Due to  caching of compiled patternfiles, you need
-> to restart `mulle-monitor run` to pick up edits to a *patternfile*.
-
-
-### mulle-monitor match
-
-To test your installed *patternfile* you can use `mulle-monitor match`. It
-will output the *callback* name if a file matches.
-
-```
-mulle-monitor -e match pix/foo.png
-```
-
-You can also test individual *patterns* using the `--pattern` option:
-
-```
-mulle-monitor -e match --pattern '*.png' pix/foo.png
-```
-
-
-### mulle-monitor find
-
-This is a facility to retrieve all filenames that match *patternfiles*. You can
-decide which *patternfile* should be used by supplying an optional filter.
-
-This example lists all the files, that pass through *patternfiles* of type
-"hello":
-
-```
-mulle-monitor -e find --match-filter "hello"
-```
-
-
 ### mulle-monitor callback
 
 
@@ -224,3 +123,65 @@ and executed.
 
 > **mulle-monitor** comes with no predefined *patternfiles*, *callbacks*, or
 > *tasks*.
+
+
+### mulle-monitor find
+
+> This command is forward to mulle-match.
+> See [mulle_match](//github.com/mulle-sde/mulle-match) for a more detailed
+> description.
+
+This example lists all the files, that pass through *patternfiles* of type
+"hello":
+
+```
+mulle-monitor -e find --match-filter "hello"
+```
+
+### mulle-monitor match
+
+> This command is forward to mulle-match.
+> See [mulle_match](//github.com/mulle-sde/mulle-match) for a more detailed
+> description.
+
+To test your installed *patternfile* you can use `mulle-monitor match`. It
+will output the *callback* name if a file matches.
+
+```
+mulle-monitor -e match pix/foo.png
+```
+
+### mulle-monitor patternfile
+
+> This command is forward to mulle-match.
+> See [mulle_match](//github.com/mulle-sde/mulle-match) for a more detailed
+> description.
+
+
+Add a *patternfile* to select the *callback* "hello" for PNG files:
+
+```
+echo "*.png" > pattern.txt
+mulle-monitor -e patternfile install hello pattern.txt
+```
+
+You can optionally specify a *category* for the patternfile, which will be
+forwarded to the callback:
+
+```
+mulle-monitor -e patternfile install --category special hello pattern.txt
+```
+
+Remove a *patternfile*:
+
+```
+mulle-monitor -e patternfile uninstall hello
+```
+
+List all *patternfiles*:
+
+```
+mulle-monitor -e patternfile list
+```
+
+

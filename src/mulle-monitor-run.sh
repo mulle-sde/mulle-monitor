@@ -590,8 +590,13 @@ monitor_run_main()
       . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-task.sh" || exit 1
    fi
 
-   mkdir_if_missing "${MULLE_MONITOR_DIR}/var/run"
-   MONITOR_PIDFILE="${MULLE_MONITOR_DIR}/var/run/monitor-pid"
+   if [ -z "${MULLE_HOSTNAME}" ]
+   then
+      MULLE_HOSTNAME="`hostname -s`"
+   fi
+
+   mkdir_if_missing "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run"
+   MONITOR_PIDFILE="${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor-pid"
 
    # use physical path
    PROJECT_DIR="`pwd -P`"

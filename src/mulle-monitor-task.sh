@@ -259,7 +259,7 @@ _task_donefile()
 
    local task="$1"
 
-   echo "${MULLE_MONITOR_DIR}/var/run/monitor/${task}-task"
+   echo "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor/${task}-task"
 }
 
 
@@ -269,7 +269,7 @@ _task_pidfile()
 
    local task="$1"
 
-   echo "${MULLE_MONITOR_DIR}/var/run/monitor/${task}-task.pid"
+   echo "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor/${task}-task.pid"
 
 }
 
@@ -755,10 +755,10 @@ ps_task_main()
    [ "$#" -ne 0 ] && list_task_usage
 
    log_info "Running Tasks:"
-   if [ -d "${MULLE_MONITOR_DIR}/var/run/monitor" ]
+   if [ -d "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor" ]
    then
    (
-      cd "${MULLE_MONITOR_DIR}/var/run/monitor"
+      cd "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor"
       IFS="
 "
       for pidfile in `ls -1 *-task.pid 2> /dev/null`
