@@ -32,7 +32,7 @@
 [ "${TRACE}" = "YES" ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION=0.4.4
+MULLE_EXECUTABLE_VERSION=0.4.5
 MULLE_EXECUTABLE_BASHFUNCTIONS="1"
 
 
@@ -156,17 +156,10 @@ monitor_environment()
 {
    log_entry "monitor_environment" "$@"
 
-   # lame but practical
    if [ -z "${MULLE_MONITOR_DIR}" ]
    then
-      if [ -d ".mulle-sde" ]
-      then
-         log_fluff "MULLE_MONITOR_DIR default is .mulle-sde"
-         MULLE_MONITOR_DIR=".mulle-sde"
-      else
-         log_fluff "MULLE_MONITOR_DIR default is .mulle-monitor"
-         MULLE_MONITOR_DIR=".mulle-monitor"
-      fi
+      log_fluff "MULLE_MONITOR_DIR default is .mulle-monitor"
+      MULLE_MONITOR_DIR=".mulle-monitor"
    fi
 
    MULLE_MONITOR_ETC_DIR="${MULLE_MONITOR_ETC_DIR:-${MULLE_MONITOR_DIR}/etc}"

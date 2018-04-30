@@ -1,3 +1,7 @@
+### 0.4.5
+
+* remove "lame but practical" hardcoded .mulle-sde dir
+
 ### 0.4.4
 
 * use `MULLE_HOSTNAME` vor var/run
