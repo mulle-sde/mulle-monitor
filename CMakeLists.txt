@@ -16,11 +16,8 @@ set( SCRIPTS
 mulle-monitor
 )
 
-set( LIBRARY_SCRIPTS
-src/mulle-monitor-callback.sh
-src/mulle-monitor-process.sh
-src/mulle-monitor-run.sh
-src/mulle-monitor-task.sh
+file( GLOB LIBRARY_SCRIPTS
+   "src/*.sh"
 )
 
 

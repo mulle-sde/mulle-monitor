@@ -1,3 +1,7 @@
+### 0.4.6
+
+* CMakeLists.txt CMakePackage.cmake LICENSE README.md RELEASENOTES.md build dox install.sh mulle-monitor mulle-monitor.graffle mulle-monitor.png mulle-monitor.sublime-project mulle-monitor.sublime-workspace mulle-project src tests tmp.12ro4m9c tmp.F1LivqOc tmp.VcXsbUuX tmp.nQn0FGZ3 simplified CMakeLists.txt
+
 ### 0.4.5
 
 * remove "lame but practical" hardcoded .mulle-sde dir
