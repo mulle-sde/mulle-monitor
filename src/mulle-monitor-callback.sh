@@ -343,7 +343,7 @@ run_callback_main()
    fi
 
    MULLE_BASHFUNCTIONS_LIBEXEC_DIR="${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" \
-      exekutor "${_executable}" "$@"
+      exekutor "${_executable}" ${MULLE_CALLBACK_FLAGS} "$@"
 }
 
 
@@ -376,6 +376,7 @@ list_callback_main()
    )
    fi
 }
+
 
 cat_callback_main()
 {

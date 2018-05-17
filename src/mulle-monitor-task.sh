@@ -551,7 +551,7 @@ run_task_main()
 
    announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_DIR}/bin:${MULLE_MONITOR_DIR}/share/bin:${PATH}" \
-      exekutor "${_functionname}" "$@"
+      exekutor "${_functionname}" ${MULLE_TASK_FLAGS} "$@"
    remember_task_rval "${task}" "$?"
 
    done_pid "${taskpidfile}"
