@@ -1,3 +1,7 @@
+### 0.5.1
+
+* rename install to installer, because of name conflict
+
 ## 0.5.0
 
 * run a task craft after other tasks if so desired (simplifies the mulle-sde-developer callbacks)
