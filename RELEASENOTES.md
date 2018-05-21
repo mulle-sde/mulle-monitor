@@ -1,3 +1,8 @@
+## 0.5.0
+
+* run a task craft after other tasks if so desired (simplifies the mulle-sde-developer callbacks)
+
+
 ### 0.4.7
 
 * rename install.sh to install, improve tracing

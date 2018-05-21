@@ -251,20 +251,44 @@ callback_and_task()
    local category="$4"
 
    local task
+   local rval
 
-   if task="`run_callback_main "${callback}" "${action}" "${filepath}" "${category}"`"
+   task="`run_callback_main "${callback}" "${action}" "${filepath}" "${category}"`"
+   rval=$?
+
+   if [ -z "${task}" ]
    then
-      if [ ! -z "${task}" ]
-      then
-         log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
+      return $rval
+   fi
 
-         if [ "${OPTION_SYNCHRONOUS}" = "YES" ]
-         then
-            eval run_task_main ${task}
-         else
-            eval run_task_job ${task}
-         fi
+   log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
+
+   if [ "${OPTION_SYNCHRONOUS}" = "YES" ]
+   then
+      if [ "${task}" != "none" ]
+      then
+         eval run_task_main "${task}"
+         rval=$?
       fi
+
+      if [ "${MULLE_SDE_CRAFT_AFTER_UPDATE}" = "YES" ]
+      then
+         run_task_main "craft"
+         rval=$?
+      fi
+      return $rval
+   fi
+
+   if [ "${MULLE_SDE_CRAFT_AFTER_UPDATE}" = "YES" ]
+   then
+      if [ "${task}" != "none" ]
+      then
+         run_task_job "${task} && add_task_job craft"
+      else
+         run_task_job "add_task_job craft"
+      fi
+   else
+      eval run_task_job "${task}"
    fi
 }
 

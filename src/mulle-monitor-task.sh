@@ -296,7 +296,7 @@ __task_get_entry_functionname()
 # sets _plugin
 _task_plugin_install_filename()
 {
-   log_entry "_task_plugin_filename" "$@"
+   log_entry "_task_plugin_install_filename" "$@"
 
    local task="$1"
 
@@ -409,7 +409,7 @@ __require_task()
 
 remove_task_job()
 {
-   log_entry "add_task_job" "$@"
+   log_entry "remove_task_job" "$@"
 
    local task="$1"
 
