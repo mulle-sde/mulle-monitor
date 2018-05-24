@@ -1,3 +1,7 @@
+### 0.5.3
+
+* fix homebrew install ruby script
+
 ### 0.5.2
 
 * improved -v debugging for clean and friends
