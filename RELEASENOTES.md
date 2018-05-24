@@ -1,3 +1,7 @@
+### 0.5.2
+
+* improved -v debugging for clean and friends
+
 ### 0.5.1
 
 * rename install to installer, because of name conflict

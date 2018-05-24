@@ -32,7 +32,7 @@
 [ "${TRACE}" = "YES" ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION=0.5.1
+MULLE_EXECUTABLE_VERSION=0.5.2
 MULLE_EXECUTABLE_BASHFUNCTIONS="1"
 
 
@@ -346,7 +346,7 @@ pass the -e flag"
 
       clean|find|match|patternfile)
          MULLE_USAGE_NAME="${MULLE_USAGE_NAME}" \
-            exekutor "${MULLE_MATCH}" ${MULLE_MATCH_FLAGS} "${cmd}" "$@"
+            exekutor "${MULLE_MATCH}" ${MULLE_TECHNICAL_FLAGS} ${MULLE_MATCH_FLAGS} "${cmd}" "$@"
       ;;
 
       libexec-dir|library-path)
