@@ -21,6 +21,6 @@ DEPENDENCIES='${TOOLS_TAP}mulle-fetch
 fswatch
 '
 
-DEBIAN_DEPENDENCIES="ifnotifywait,mulle-fetch"
+DEBIAN_DEPENDENCIES="inotify-tools, mulle-fetch"
 
 
