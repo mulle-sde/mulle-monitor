@@ -1,3 +1,7 @@
+### 0.5.6
+
+* fix debian dependencies
+
 ### 0.5.5
 
 * fix debian dependencies
