@@ -15,20 +15,15 @@ appropriate executable to call.
 ![](dox/mulle-monitor-overview.png)
 
 
-## Install
-
-
-OS          | Command
-------------|------------------------------------
-macos       | `brew install mulle-kybernetik/software/mulle-monitor`
-other       | Install prerequisite [mulle-bashfunctions](//github.com/mulle-nat/mulle-bashfunctions) first. Then `./install.sh`
-
-
-
 Executable      | Description
 ----------------|--------------------------------
 `mulle-monitor` | Observe changes in filesystem and react to them
 
+
+## Install
+
+See [mulle-sde-developer](//github.com/mulle-sde/mulle-sde-developer) how
+to install mulle-sde.
 
 
 ## Commands
