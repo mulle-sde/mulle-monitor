@@ -1,3 +1,7 @@
+### 0.5.9
+
+* remove file from git
+
 ### 0.5.8
 
 * simplify README

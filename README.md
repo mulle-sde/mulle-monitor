@@ -179,4 +179,3 @@ List all *patternfiles*:
 mulle-monitor -e patternfile list
 ```
 
-
