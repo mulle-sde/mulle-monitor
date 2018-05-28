@@ -17,7 +17,7 @@ LANGUAGE="bash"             # c,cpp, objc, bash ...
 # DEPENDENCIES and BUILD_DEPENDENCIES will be evaled later!
 # So keep them single quoted.
 #
-DEPENDENCIES='${TOOLS_TAP}mulle-match
+DEPENDENCIES='${MULLE_SDE_TAP}mulle-match
 fswatch
 '
 

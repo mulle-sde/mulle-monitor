@@ -1,3 +1,7 @@
+### 0.5.7
+
+* improved brew formula defintion
+
 ### 0.5.6
 
 * fix debian dependencies

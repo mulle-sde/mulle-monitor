@@ -32,7 +32,7 @@
 [ "${TRACE}" = "YES" ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION=0.5.6
+MULLE_EXECUTABLE_VERSION=0.5.7
 MULLE_EXECUTABLE_BASHFUNCTIONS="1"
 
 
@@ -322,8 +322,6 @@ pass the -e flag"
 
    [ -d "${physdir}" ]      || fail "Working directory \"${PWD}\" does not exist"
    exekutor cd "${physdir}" || fail "Could not cd to physical directory \"${physdir}\""
-
-   MULLE_EXECUTABLE_OPTIONS="$@"
 
    MULLE_MATCH="`command -v "${MULLE_MATCH:-mulle-match}"`"
    [ -z "${MULLE_MATCH}" ] && fail "mulle-match is missing"
