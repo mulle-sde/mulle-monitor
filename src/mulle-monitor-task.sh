@@ -486,11 +486,15 @@ add_task_job()
 
       log_fluff "==> Starting task"
 
+      local rval
+
       PATH="${MULLE_MONITOR_DIR}/bin:${MULLE_MONITOR_DIR}/share/bin:${PATH}" \
          eval_exekutor "$@"
-      remember_task_rval "${task}" "$?"
+      rval=$?
 
-      log_fluff "==> Ended task"
+      remember_task_rval "${task}" "${rval}"
+
+      log_fluff "==> Ended task ($rval)"
 
       done_pid "${taskpidfile}"
    ) &
@@ -549,18 +553,24 @@ run_task_main()
    taskpidfile="`_task_pidfile "${task}"`"
    kill_pid "${taskpidfile}"
 
+   local rval
+
    announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_DIR}/bin:${MULLE_MONITOR_DIR}/share/bin:${PATH}" \
       exekutor "${_functionname}" ${MULLE_TASK_FLAGS} "$@"
-   remember_task_rval "${task}" "$?"
+
+   rval=$?
+   remember_task_rval "${task}" "${rval}"
 
    done_pid "${taskpidfile}"
+
+   return $rval
 }
 
 
 cat_task_main()
 {
-   log_entry "run_task_main" "$@"
+   log_entry "cat_task_main" "$@"
 
    local task="$1"
 

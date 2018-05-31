@@ -1,3 +1,7 @@
+### 0.5.10
+
+* return rval from main task run
+
 ### 0.5.9
 
 * remove file from git
