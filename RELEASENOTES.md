@@ -1,3 +1,7 @@
+### 0.5.11
+
+* capitalize an error message properly
+
 ### 0.5.10
 
 * return rval from main task run

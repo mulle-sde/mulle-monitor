@@ -32,7 +32,7 @@
 [ "${TRACE}" = "YES" ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION=0.5.10
+MULLE_EXECUTABLE_VERSION=0.5.11
 MULLE_EXECUTABLE_BASHFUNCTIONS="1"
 
 
@@ -244,28 +244,28 @@ main()
          ;;
 
          -cd|--config-dir)
-            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "missing argument to \"$1\""
+            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
             shift
 
             MULLE_MONITOR_DIR="$1"
          ;;
 
          -ed|--etc-dir)
-            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "missing argument to \"$1\""
+            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
             shift
 
             MULLE_MONITOR_ETC_DIR="$1"
          ;;
 
          -md|--match-dir)
-            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "missing argument to \"$1\""
+            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
             shift
 
             MULLE_MONITOR_MATCH_DIR="$1"
          ;;
 
          -id|--ignore-dir)
-            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "missing argument to \"$1\""
+            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
 
             MULLE_MONITOR_IGNORE_DIR="$1"
          ;;
