@@ -1,3 +1,7 @@
+### 0.5.12
+
+* capitalize error message
+
 ### 0.5.11
 
 * capitalize an error message properly

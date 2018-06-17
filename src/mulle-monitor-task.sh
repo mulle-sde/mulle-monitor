@@ -240,7 +240,7 @@ _cheap_help_options()
          ;;
 
          -*)
-             "${usage}" "unknown option \"$1\""
+             "${usage}" "Unknown option \"$1\""
          ;;
 
          *)

@@ -576,7 +576,7 @@ monitor_run_main()
          ;;
 
          -*)
-            monitor_run_usage "unknown option \"$1\""
+            monitor_run_usage "Unknown option \"$1\""
             ;;
 
          *)
