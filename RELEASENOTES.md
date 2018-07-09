@@ -1,3 +1,7 @@
+### 0.5.13
+
+* minor code improvements
+
 ### 0.5.12
 
 * capitalize error message
