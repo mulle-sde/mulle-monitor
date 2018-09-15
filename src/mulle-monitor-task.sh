@@ -310,7 +310,6 @@ r_task_plugin_install_filename()
 }
 
 
-# sets _plugin
 r_task_plugin_filename()
 {
    log_entry "r_task_plugin_filename" "$@"
@@ -320,14 +319,13 @@ r_task_plugin_filename()
    [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
 
    RVAL="${MULLE_MONITOR_DIR}/share/libexec/${task}-task.sh"
-   if [ ! -f "${_plugin}" ]
+   if [ ! -f "${RVAL}" ]
    then
       RVAL="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
    fi
 }
 
 
-# returns plugin filename
 r_locate_task()
 {
    log_entry "r_locate_task" "$@"
@@ -338,7 +336,7 @@ r_locate_task()
 
    if [ ! -f "${RVAL}" ]
    then
-      log_error "There is no installed task \"${task}\"."
+      log_error "There is no installed task \"${task}\" (${RVAL})."
       return 1
    fi
 }
@@ -622,7 +620,10 @@ add_task_main()
    [ -e "${_plugin}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = "NO" ] \
       && fail "\"${_plugin}\" already exists. Use -f to clobber"
 
-   __require_filename "${task}" "${filename}"
+   # check that it's valid
+   (
+      __require_filename "${task}" "${filename}"
+   ) || exit 1
 
    local plugindir
 

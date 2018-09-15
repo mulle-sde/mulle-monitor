@@ -1,3 +1,7 @@
+### 0.6.1
+
+* fix RVAL problem
+
 ## 0.6.0
 
 * use `r_` functions of mulle-bashfunctions 1.8.0
