@@ -200,27 +200,29 @@ _process_event()
 
 
    local _patternfile
+   local RVAL
 
    #
    # not as cheap. If mulle-match is our script stuff, it's too expensive
    # to fork this everytime. We use it as a library.
    #
    case "${MULLE_MATCH}" in
-      */mulle-match)
+      ""|*/mulle-match)
 
          . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
 
          # returns 0,1,2
-         _match_filepath "${ignore}" "${match}" "${filepath}"
+         r_match_filepath "${ignore}" "${match}" "${filepath}"
          if [ $? -eq 1 ]
          then
             return 1
          fi
+         _patternfile="${RVAL}"
       ;;
 
       *)
 
-         if ! _patternfile="`"${MULLE_MATCH}" --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
+         if ! _patternfile="`"${MULLE_MATCH:-mulle-match}" --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
                                               --match-dir "${MULLE_MONITOR_MATCH_DIR}" \
                                               --ignore-filter "${OPTION_IGNORE_FILTER}" \
                                               --match-filter "${OPTION_MATCH_FILTER}" \
@@ -303,9 +305,12 @@ _watch_using_fswatch()
    local cmd
    local workingdir
    local escaped_workingdir
+   local RVAL
 
    workingdir="`pwd -P`"
-   escaped_workingdir="`escaped_sed_pattern "${workingdir}/"`"
+
+   r_escaped_sed_pattern "${workingdir}/"
+   escaped_workingdir="${RVAL}"
 
    IFS="
 "
@@ -652,7 +657,7 @@ monitor_run_main()
 
    if [ -z "${MULLE_MATCH_MATCH_SH}" ]
    then
-      MULLE_MATCH_LIBEXEC_DIR="`mulle-match libexec-dir`" || exit 1
+      MULLE_MATCH_LIBEXEC_DIR="`"${MULLE_MATCH:-mulle-match}" libexec-dir`" || exit 1
 
       . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-environment.sh" || exit 1
       match_environment "${MULLE_MONITOR_DIR}"
@@ -663,13 +668,14 @@ monitor_run_main()
    local _cache
    local ignore
    local match
+   local RVAL
 
-   _patternfilefunctions_passing_filter "${MULLE_MONITOR_IGNORE_DIR}" \
-                                        "${OPTION_IGNORE_FILTER}"
+   _define_patternfilefunctions "${MULLE_MONITOR_IGNORE_DIR}"  \
+                                "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/cache/ignore"
    ignore="${_cache}"
 
-   _patternfilefunctions_passing_filter "${MULLE_MONITOR_MATCH_DIR}" \
-                                        "${OPTION_MATCH_FILTER}"
+   _define_patternfilefunctions "${MULLE_MONITOR_MATCH_DIR}" \
+                                "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/cache/match"
    match="${_cache}"
 
    #

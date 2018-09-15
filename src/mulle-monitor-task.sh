@@ -253,32 +253,29 @@ _cheap_help_options()
 }
 
 
-_task_donefile()
+r_task_donefile()
 {
-   log_entry "_task_donefile" "$@"
+   log_entry "r_task_donefile" "$@"
 
    local task="$1"
 
-   echo "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor/${task}-task"
+   RVAL="${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor/${task}-task"
 }
 
 
-_task_pidfile()
+r_task_pidfile()
 {
-   log_entry "_task_pidfile" "$@"
+   log_entry "r_task_pidfile" "$@"
 
    local task="$1"
 
-   echo "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor/${task}-task.pid"
-
+   RVAL="${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor/${task}-task.pid"
 }
 
-#
-# return in _functionname
-#
-__task_get_entry_functionname()
+
+r_task_get_entry_functionname()
 {
-   log_entry "__task_get_entry_functionname" "$@"
+   log_entry "r_task_get_entry_functionname" "$@"
 
    local task="$1"
 
@@ -287,16 +284,15 @@ __task_get_entry_functionname()
    local taskidentifier
 
    taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
-   _functionname="${taskidentifier}_task_run"
+   RVAL="${taskidentifier}_task_run"
 
-   log_debug "task functionname: \"${_functionname}\""
+   log_debug "task functionname: \"${RVAL}\""
 }
 
 
-# sets _plugin
-_task_plugin_install_filename()
+r_task_plugin_install_filename()
 {
-   log_entry "_task_plugin_install_filename" "$@"
+   log_entry "r_task_plugin_install_filename" "$@"
 
    local task="$1"
 
@@ -310,37 +306,39 @@ _task_plugin_install_filename()
 
    [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
 
-   _plugin="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
+   RVAL="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
 }
 
 
 # sets _plugin
-_task_plugin_filename()
+r_task_plugin_filename()
 {
-   log_entry "_task_plugin_filename" "$@"
+   log_entry "r_task_plugin_filename" "$@"
 
    local task="$1"
 
    [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
 
-   _plugin="${MULLE_MONITOR_DIR}/share/libexec/${task}-task.sh"
+   RVAL="${MULLE_MONITOR_DIR}/share/libexec/${task}-task.sh"
    if [ ! -f "${_plugin}" ]
    then
-      _plugin="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
+      RVAL="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
    fi
 }
 
 
-# sets _plugin
-_locate_task()
+# returns plugin filename
+r_locate_task()
 {
-   log_entry "_locate_task" "$@"
+   log_entry "r_locate_task" "$@"
 
-   _task_plugin_filename "$@"
+   local task="$1"
 
-   if [ ! -f "${_plugin}" ]
+   r_task_plugin_filename "${task}"
+
+   if [ ! -f "${RVAL}" ]
    then
-      log_error "There is no installed task \"$1\"."
+      log_error "There is no installed task \"${task}\"."
       return 1
    fi
 }
@@ -352,14 +350,14 @@ _load_task()
 
    local task="$1"
 
-   local _plugin
+   local RVAL
 
-   if ! _locate_task "${task}"
+   if ! r_locate_task "${task}"
    then
       exit 1
    fi
 
-   . "${_plugin}" || exit 1
+   . "${RVAL}" || exit 1
 }
 
 
@@ -370,40 +368,48 @@ __require_filename()
    local task="$1"
    local filename="$2"
 
-   [ -f "${filename}" ] || fail "\"${filename}\" does not exist"
+   local functionname
+   local RVAL
 
-   (
-      local _functionname
+   r_task_get_entry_functionname "${task}"
+   functionname="${RVAL}"
 
-      __task_get_entry_functionname "${task}"
+   unset -f "${functionname}"
 
-      unset -f "${_functionname}"
+   . "${filename}" 2> /dev/null || fail "\"${filename}\" is not a valid bash script"
 
-      . "${filename}" 2> /dev/null || fail "\"${filename}\" is not a valid bash script"
-
-      if [ "`type -t "${_functionname}"`" != "function" ]
-      then
-         fail "\"${filename}\" does not define function \"${_functionname}\""
-      fi
-   ) || exit 1
+   if [ "`type -t "${functionname}"`" != "function" ]
+   then
+      fail "\"${filename}\" does not define function \"${functionname}\""
+   fi
 }
 
 
-__require_task()
+r_require_task()
 {
-   log_entry "__require_task" "$@"
+   log_entry "r_require_task" "$@"
 
    local task="$1"
 
-   __task_get_entry_functionname "${task}"
-   if [ "`type -t "${_functionname}"`" != "function" ]
+   local functionname
+
+   r_task_get_entry_functionname "${task}"
+   functionname="${RVAL}"
+
+   if [ "`type -t "${functionname}"`" != "function" ]
    then
       _load_task "${task}"
    fi
-   if [ "`type -t "${_functionname}"`" != "function" ]
+
+   if [ "${MULLE_FLAG_LOG_VERBOSE}" = "YES" ]
    then
-      fail "\"${_plugin}\" does not define function \"${_functionname}\""
+      if [ "`type -t "${functionname}"`" != "function" ]
+      then
+         fail "\"${task}\" does not define function \"${functionname}\""
+      fi
    fi
+
+   RVAL="${functionname}"
 }
 
 
@@ -413,10 +419,10 @@ remove_task_job()
 
    local task="$1"
 
-   local taskpidfile
+   local RVAL
 
-   taskpidfile="`_task_pidfile "${task}"`"
-   kill_pid "${taskpidfile}"
+   r_task_pidfile "${task}"
+   kill_pid "${RVAL}"
 }
 
 
@@ -429,6 +435,7 @@ remember_task_rval()
 
    local taskdonefile
    local status
+   local RVAL
 
    status="failed"
    case "${rval}" in
@@ -441,8 +448,10 @@ remember_task_rval()
       ;;
    esac
 
-   taskdonefile="`_task_donefile "${task}"`"
-   mkdir_if_missing "`fast_dirname "${taskdonefile}"`"
+   r_task_donefile "${task}"
+   taskdonefile="${RVAL}"
+   r_fast_dirname "${taskdonefile}"
+   mkdir_if_missing "${RVAL}"
    redirect_exekutor "${taskdonefile}" echo "${status}"
 }
 
@@ -458,8 +467,10 @@ add_task_job()
    # rest commandline
 
    local taskpidfile
+   local RVAL
 
-   taskpidfile="`_task_pidfile "${task}"`"
+   r_task_pidfile "${task}"
+   taskpidfile="${RVAL}"
    kill_pid "${taskpidfile}"
 
    local timestamp
@@ -507,10 +518,11 @@ run_task_job()
 
    local task="$1"; shift
 
-   local _functionname
+   local functionname
+   local RVAL
 
-   __require_task "${task}" || exit 1
-
+   r_require_task "${task}" || exit 1
+   functionname="${RVAL}"
    #
    # check that a task of same name is not running/schedulded. If yes
    # prempt it.
@@ -520,11 +532,11 @@ run_task_job()
    #
    case "${MULLE_UNAME}" in
       linux|darwin)
-         add_task_job "${task}" sleep "0.3s" "'${_functionname}'" "$@"
+         add_task_job "${task}" sleep "0.3s" "'${functionname}'" "$@"
       ;;
 
       *)
-         add_task_job "${task}" sleep "1" "'${_functionname}'" "$@"
+         add_task_job "${task}" sleep "1" "'${functionname}'" "$@"
       ;;
    esac
 }
@@ -544,20 +556,23 @@ run_task_main()
 
    taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
 
-   local _functionname
+   local functionname
+   local RVAL
 
-   __require_task "${task}" || exit 1
+   r_require_task "${task}" || exit 1
+   functionname="${RVAL}"
 
    local taskpidfile
 
-   taskpidfile="`_task_pidfile "${task}"`"
+   r_task_pidfile "${task}"
+   taskpidfile="${RVAL}"
    kill_pid "${taskpidfile}"
 
    local rval
 
    announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_DIR}/bin:${MULLE_MONITOR_DIR}/share/bin:${PATH}" \
-      exekutor "${_functionname}" ${MULLE_TASK_FLAGS} "$@"
+      exekutor "${functionname}" ${MULLE_TASK_FLAGS} "$@"
 
    rval=$?
    remember_task_rval "${task}" "${rval}"
@@ -576,11 +591,11 @@ cat_task_main()
 
    [ -z "${task}" ] && cat_task_usage "Empty task"
 
-   local _plugin
+   local RVAL
 
-   _locate_task "${task}" || exit 1
+   r_locate_task "${task}" || exit 1
 
-   exekutor cat "${_plugin}"
+   exekutor cat "${RVAL}"
 }
 
 
@@ -599,8 +614,10 @@ add_task_main()
    [ -z "${filename}" ] && add_task_usage "missing filename"
 
    local _plugin
+   local RVAL
 
-   _task_plugin_install_filename "${task}"
+   r_task_plugin_install_filename "${task}"
+   _plugin="${RVAL}"
 
    [ -e "${_plugin}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = "NO" ] \
       && fail "\"${_plugin}\" already exists. Use -f to clobber"
@@ -609,7 +626,8 @@ add_task_main()
 
    local plugindir
 
-   plugindir="`dirname -- "${_plugin}"`"
+   r_fast_dirname "${_plugin}"
+   plugindir="${RVAL}"
 
    patternfile="${OPTION_POSITION}-${typename}--${OPTION_CATEGORY}"
    if [ "${filename}" = "-" ]
@@ -638,8 +656,10 @@ remove_task_main()
    local task="$1"
 
    local _plugin
+   local RVAL
 
-   _task_plugin_install_filename "${task}"
+   r_task_plugin_install_filename "${task}"
+   _plugin="${RVAL}"
 
    if [ ! -e "${_plugin}" ]
    then
@@ -688,9 +708,9 @@ test_task_main()
 
    [ "$#" -lt 1 ] && test_task_usage
 
-   local _functionname
+   local RVAL
 
-   __require_task "$@"
+   r_require_task "$@"
 }
 
 
@@ -706,15 +726,19 @@ status_task_main()
 
    local taskpidfile
    local taskdonefile
+   local RVAL
 
-   taskpidfile="`_task_pidfile "${task}"`"
+   r_task_pidfile "${task}"
+   taskpidfile="${RVAL}"
+
    if [ -f "${taskpidfile}" ]
    then
       echo "running"
       return
    fi
 
-   taskdonefile="`_task_donefile "${task}"`"
+   r_task_donefile "${task}"
+   taskdonefile="${RVAL}"
    if [ -f "${taskdonefile}" ]
    then
       cat "${taskdonefile}"
@@ -736,8 +760,11 @@ kill_task_main()
    local task="$1"
 
    local taskdonefile
+   local RVAL
 
-   taskpidfile="`_task_pidfile "${task}"`"
+   r_task_pidfile "${task}"
+   taskpidfile="${RVAL}"
+
    if [ ! -f "${taskpidfile}" ]
    then
       log_warning "Task \"${task}\" not known to be running. \
@@ -773,7 +800,7 @@ ps_task_main()
 "
       for pidfile in `ls -1 *-task.pid 2> /dev/null`
       do
-         task="`sed -e 's/-task\.pid//' <<< "${pidfile}"`"
+         task="${pidfile%-task\.pid}"
          pid="`cat "${pidfile}"`"
          if [ "${pid}" = "$$" ]
          then
@@ -797,11 +824,11 @@ locate_task_main()
 
    local task="$1"; shift
 
-   local _plugin
+   local RVAL
 
-   _locate_task "${task}" || exit 1
+   r_locate_task "${task}" || exit 1
 
-   exekutor echo "${_plugin}"
+   exekutor echo "${RVAL}"
 }
 
 

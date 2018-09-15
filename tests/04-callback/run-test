@@ -38,7 +38,7 @@ expect_failure_mulle_monitor()
 
    if result="`run_mulle_monitor "$@"`"
    then
-      fail "Did not fail unexpectedly"
+      fail "Unexpectedly did not fail"
    else
       log_info "Failed as expected"
    fi

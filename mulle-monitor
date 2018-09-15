@@ -318,12 +318,6 @@ pass the -e flag"
       esac
    fi
 
-   [ -d "${physdir}" ]      || fail "Working directory \"${PWD}\" does not exist"
-   exekutor cd "${physdir}" || fail "Could not cd to physical directory \"${physdir}\""
-
-   MULLE_MATCH="`command -v "${MULLE_MATCH:-mulle-match}"`"
-   [ -z "${MULLE_MATCH}" ] && fail "mulle-match is missing"
-
    local rval
 
    monitor_environment
@@ -342,7 +336,7 @@ pass the -e flag"
 
       clean|find|match|patternfile)
          MULLE_USAGE_NAME="${MULLE_USAGE_NAME}" \
-            exekutor "${MULLE_MATCH}" ${MULLE_TECHNICAL_FLAGS} ${MULLE_MATCH_FLAGS} "${cmd}" "$@"
+            exekutor "${MULLE_MATCH:-mulle-match}" ${MULLE_TECHNICAL_FLAGS} ${MULLE_MATCH_FLAGS} "${cmd}" "$@"
       ;;
 
       libexec-dir|library-path)
