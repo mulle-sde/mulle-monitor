@@ -1,3 +1,9 @@
+## 0.6.0
+
+* use `r_` functions of mulle-bashfunctions 1.8.0
+* use `r_` functions of mulle-bashfunctions 1.8.0
+
+
 ### 0.5.13
 
 * minor code improvements
