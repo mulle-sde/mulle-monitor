@@ -29,7 +29,7 @@
 #   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #   POSSIBILITY OF SUCH DAMAGE.
 #
-[ "${TRACE}" = "YES" -o "${MULLE_MONITOR_TRACE}" = "YES" ] && set -x && : "$0" "$@"
+[ "${TRACE}" = 'YES' -o "${MULLE_MONITOR_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
 MULLE_EXECUTABLE_VERSION=0.6.1
@@ -61,7 +61,7 @@ print_commands()
 
    echo "${SHOWN_COMMANDS}"
 
-   if [ "${show_all}" != "NO" ]
+   if [ "${show_all}" != 'NO' ]
    then
       echo "${HIDDEN_COMMANDS}"
    fi
@@ -70,10 +70,14 @@ print_commands()
 
 print_hidden_flags()
 {
-   echo "   -cd <dir>      : set MULLE_MONITOR_DIR"
-   echo "   -id <dir>      : set MULLE_MONITOR_IGNORE_DIR"
-   echo "   -md <dir>      : set MULLE_MONITOR_MATCH_DIR"
-   echo "   -ed <dir>      : set MULLE_MONITOR_ETC_DIR"
+   cat <<EOF
+   --default-callback <command> : use 'echo <taskname>' to run only one task
+   --config-dir <dir>           : set MULLE_MONITOR_DIR
+   --ignore-dir <dir>           : set MULLE_MONITOR_IGNORE_DIR
+   --match-dir <dir>            : set MULLE_MONITOR_MATCH_DIR
+   --etc-dir <dir>              : set MULLE_MONITOR_ETC_DIR
+   --var-dir <dir>              : set MULLE_MONITOR_VAR_DIR
+EOF
 }
 
 
@@ -83,15 +87,16 @@ print_flags()
 
    local delimiter
 
-   delimiter="          : "
+   delimiter="                        : "
 
-   if [ "${show_all}" != "NO" ]
+   if [ "${show_all}" != 'NO' ]
    then
       print_hidden_flags
    fi
 
    echo "   -e   ${delimiter}bypass mulle-env check"
    echo "   -f   ${delimiter}force operation"
+   echo "   --sleep <delay>              : time to coalesce multiple events"
 
    options_technical_flags_usage "${delimiter}"
 }
@@ -115,6 +120,10 @@ Usage:
    callback may optionally invoke a task. Which callback is invoked, is based
    on patternfiles, which are .gitignore like rule files.
 
+   A callback should be extremely short lived. A task can be long running.
+   Multiple callbacks can coalesce to one task run, if they are appearing
+   within the \`--sleep\` period.
+
 Flags:
 EOF
    print_flags "${verbose}" | LC_ALL=C sort
@@ -127,7 +136,7 @@ EOF
 
    print_commands "${verbose}" | LC_ALL=C sort
 
-   if [ "${verbose}" = "NO" ]
+   if [ "${verbose}" = 'NO' ]
    then
       cat <<EOF
       (use mulle-monitor -v help to show more commands)
@@ -149,18 +158,14 @@ usage()
    exit 1
 }
 
-
-monitor_environment()
+#
+# call only if needed
+#
+monitor_match_environment()
 {
-   log_entry "monitor_environment" "$@"
+   log_entry "monitor_match_environment" "$@"
 
-   if [ -z "${MULLE_MONITOR_DIR}" ]
-   then
-      log_fluff "MULLE_MONITOR_DIR default is .mulle-monitor"
-      MULLE_MONITOR_DIR=".mulle-monitor"
-   fi
-
-   MULLE_MONITOR_ETC_DIR="${MULLE_MONITOR_ETC_DIR:-${MULLE_MONITOR_DIR}/etc}"
+   MULLE_MONITOR_MATCH_ENVIRONMENT='YES'
 
    case "${MULLE_MONITOR_MATCH_DIR}" in
       NO)
@@ -176,7 +181,7 @@ monitor_environment()
          fi
          if [ ! -d "${MULLE_MONITOR_MATCH_DIR}" ]
          then
-            log_warning "There is no directory \"${MULLE_MONITOR_MATCH_DIR}\" set up"
+            log_warning "There is no directory \"${MULLE_MONITOR_MATCH_DIR#${PWD}/}\" set up"
             MULLE_MONITOR_MATCH_DIR=""
          fi
       ;;
@@ -196,30 +201,93 @@ monitor_environment()
          fi
          if [ ! -d "${MULLE_MONITOR_IGNORE_DIR}" ]
          then
-            log_fluff "There is no directory \"${MULLE_MONITOR_IGNORE_DIR}\" set up"
+            log_fluff "There is no directory \"${MULLE_MONITOR_IGNORE_DIR#${PWD}/}\" set up"
             MULLE_MONITOR_IGNORE_DIR=""
          fi
       ;;
    esac
+
+   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
+   then
+      log_trace2 "MULLE_MONITOR_MATCH_ENVIRONMENT='${MULLE_MONITOR_MATCH_ENVIRONMENT}'"
+      log_trace2 "MULLE_MONITOR_MATCH_DIR='${MULLE_MONITOR_MATCH_DIR}'"
+      log_trace2 "MULLE_MONITOR_IGNORE_DIR='${MULLE_MONITOR_IGNORE_DIR}'"
+   fi
+}
+
+
+monitor_environment()
+{
+   log_entry "monitor_environment" "$@"
+
+   if [ -z "${MULLE_MONITOR_DIR}" ]
+   then
+      log_fluff "MULLE_MONITOR_DIR default is .mulle-monitor"
+
+      MULLE_MONITOR_DIR='.mulle-monitor'
+   fi
+
+   local RVAL
+
+   r_absolutepath "${MULLE_MONITOR_DIR}"
+   MULLE_MONITOR_DIR="${RVAL}"
+
+   r_fast_dirname "${MULLE_MONITOR_DIR}"
+   MULLE_MONITOR_PARENT_DIR="${RVAL}"
+
+   MULLE_MONITOR_ETC_DIR="${MULLE_MONITOR_ETC_DIR:-${MULLE_MONITOR_DIR}/etc}"
+   MULLE_MONITOR_VAR_DIR="${MULLE_MONITOR_VAR_DIR:-${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}}"
+
+   MULLE_MONITOR_SLEEP_EXE=sleep
+
+   if [ -z "${MULLE_MONITOR_SLEEP_TIME}" ]
+   then
+      case "${MULLE_UNAME}" in
+         linux|darwin)
+            MULLE_MONITOR_SLEEP_TIME="1" # "0.3s"
+         ;;
+      esac
+   fi
+
+   if [ "${MULLE_FLAG_LOG_SETTINGS}" = 'YES' ]
+   then
+      log_trace2 "MULLE_MONITOR_SLEEP_EXE='${MULLE_MONITOR_SLEEP_EXE}'"
+      log_trace2 "MULLE_MONITOR_SLEEP_TIME='${MULLE_MONITOR_SLEEP_TIME}'"
+      log_trace2 "MULLE_MONITOR_DIR='${MULLE_MONITOR_DIR}'"
+      log_trace2 "MULLE_MONITOR_ETC_DIR='${MULLE_MONITOR_ETC_DIR}'"
+      log_trace2 "MULLE_MONITOR_VAR_DIR='${MULLE_MONITOR_VAR_DIR}'"
+   fi
 }
 
 
 main()
 {
-   local MULLE_FLAG_MAGNUM_FORCE="NO"
+   local MULLE_FLAG_MAGNUM_FORCE='NO'
 
    # technical flags
    local MULLE_TRACE
-   local MULLE_FLAG_EXEKUTOR_DRY_RUN="NO"
-   local MULLE_FLAG_LOG_LOCAL="NO"
-   local MULLE_FLAG_LOG_DEBUG="NO"
-   local MULLE_FLAG_LOG_EXEKUTOR="NO"
-   local MULLE_FLAG_LOG_FLUFF="NO"
-   local MULLE_FLAG_LOG_SCRIPTS="NO"
-   local MULLE_FLAG_LOG_SETTINGS="NO"
-   local MULLE_FLAG_LOG_VERBOSE="NO"
-   local MULLE_FLAG_LOG_MERGE="NO"
-   local MULLE_TRACE_POSTPONE="NO"
+   local MULLE_FLAG_EXEKUTOR_DRY_RUN='NO'
+   local MULLE_FLAG_LOG_LOCAL='NO'
+   local MULLE_FLAG_LOG_DEBUG='NO'
+   local MULLE_FLAG_LOG_EXEKUTOR='NO'
+   local MULLE_FLAG_LOG_FLUFF='NO'
+   local MULLE_FLAG_LOG_SCRIPTS='NO'
+   local MULLE_FLAG_LOG_SETTINGS='NO'
+   local MULLE_FLAG_LOG_VERBOSE='NO'
+   local MULLE_FLAG_LOG_MERGE='NO'
+   local MULLE_TRACE_POSTPONE='NO'
+   local MULLE_MONITOR_PREEMPT='YES'
+
+   if [ -z "${MULLE_PATH_SH}" ]
+   then
+      # shellcheck source=mulle-path.sh
+      . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-path.sh"      || return 1
+   fi
+   if [ -z "${MULLE_FILE_SH}" ]
+   then
+      # shellcheck source=mulle-file.sh
+      . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-file.sh"      || return 1
+   fi
 
    #
    # simple option handling
@@ -233,12 +301,24 @@ main()
       fi
 
       case "$1" in
+         -h*|--help|help)
+            usage "${MULLE_TRACE}"
+         ;;
+
          -e)
-            FLAG_OUTSIDE_ENV="YES"
+            FLAG_OUTSIDE_ENV='YES'
          ;;
 
          -f)
-            MULLE_FLAG_MAGNUM_FORCE="YES"
+            MULLE_FLAG_MAGNUM_FORCE='YES'
+         ;;
+
+         --preempt)
+            MULLE_MONITOR_PREEMPT='YES'
+         ;;
+
+         --no-preempt)
+            MULLE_MONITOR_PREEMPT='NO'
          ;;
 
          -cd|--config-dir)
@@ -246,6 +326,13 @@ main()
             shift
 
             MULLE_MONITOR_DIR="$1"
+         ;;
+
+         --default-callback)
+            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
+            shift
+
+            MULLE_MONITOR_DEFAULT_CALLBACK="$1"
          ;;
 
          -ed|--etc-dir)
@@ -264,12 +351,21 @@ main()
 
          -id|--ignore-dir)
             [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
+            shift
 
             MULLE_MONITOR_IGNORE_DIR="$1"
          ;;
 
-         -h*|--help|help)
-            usage "${MULLE_TRACE}"
+         --sleep)
+            [ $# -eq 1 ] && usage "${MULLE_TRACE}" "Missing argument to \"$1\""
+            shift
+
+            MULLE_MONITOR_SLEEP_TIME="$1"
+         ;;
+
+         --var-tmp)
+            r_make_tmp "mulle-monitor" "-d"
+            MULLE_MONITOR_VAR_DIR="${RVAL}"
          ;;
 
          --version)
@@ -301,7 +397,7 @@ main()
 
    physdir="`pwd -P`"
 
-   if [ "${FLAG_OUTSIDE_ENV}" = "YES" ]
+   if [ "${FLAG_OUTSIDE_ENV}" = 'YES' ]
    then
       MULLE_VIRTUAL_ROOT="${physdir}"
       [ "${MULLE_VIRTUAL_ROOT}" = "/" ] && fail "MULLE_VIRTUAL_ROOT must not be /"
@@ -335,8 +431,17 @@ pass the -e flag"
       ;;
 
       clean|find|match|patternfile)
+         monitor_match_environment
+
          MULLE_USAGE_NAME="${MULLE_USAGE_NAME}" \
-            exekutor "${MULLE_MATCH:-mulle-match}" ${MULLE_TECHNICAL_FLAGS} ${MULLE_MATCH_FLAGS} "${cmd}" "$@"
+            exekutor "${MULLE_MATCH:-mulle-match}" \
+                           ${MULLE_TECHNICAL_FLAGS} \
+                           ${MULLE_MATCH_FLAGS} \
+                           --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
+                           --match-dir "${MULLE_MONITOR_MATCH_DIR}" \
+                           --var-dir "${MULLE_MONITOR_VAR_DIR}" \
+                        "${cmd}" \
+                           "$@"
       ;;
 
       libexec-dir|library-path)
@@ -344,6 +449,8 @@ pass the -e flag"
       ;;
 
       run)
+         monitor_match_environment
+
          # shellcheck source=src/mulle-monitor-run.sh
          . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-run.sh"
 

@@ -185,7 +185,7 @@ _action_of_event_command()
 # _
 _process_event()
 {
-   log_entry "process_event" "$@"
+   log_entry "_process_event" "$@"
 
    local ignore="$1"
    local match="$2"
@@ -198,6 +198,11 @@ _process_event()
       return 1
    fi
 
+   case "${filepath}" in
+      ${MULLE_MONITOR_DIR}*)
+         return 1
+      ;;
+   esac
 
    local _patternfile
    local RVAL
@@ -209,24 +214,35 @@ _process_event()
    case "${MULLE_MATCH}" in
       ""|*/mulle-match)
 
-         . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
+         if ! [ -z "${MULLE_MATCH_MATCH_SH}" ]
+         then
+            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
+         fi
 
          # returns 0,1,2
          r_match_filepath "${ignore}" "${match}" "${filepath}"
-         if [ $? -eq 1 ]
-         then
-            return 1
-         fi
+         case $?  in
+            1)
+               return 1
+            ;;
+
+            2)
+               _callback="default"
+               _category="all"
+               return 0
+            ;;
+         esac
          _patternfile="${RVAL}"
       ;;
 
       *)
-
-         if ! _patternfile="`"${MULLE_MATCH:-mulle-match}" --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
-                                              --match-dir "${MULLE_MONITOR_MATCH_DIR}" \
-                                              --ignore-filter "${OPTION_IGNORE_FILTER}" \
-                                              --match-filter "${OPTION_MATCH_FILTER}" \
-                                              "${filepath}" `"
+         if ! _patternfile="`"${MULLE_MATCH:-mulle-match}" \
+                --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
+                --match-dir "${MULLE_MONITOR_MATCH_DIR}" \
+                --var-dir "${MULLE_MONITOR_VAR_DIR}" \
+                --ignore-filter "${OPTION_IGNORE_FILTER}" \
+                --match-filter "${OPTION_MATCH_FILTER}" \
+                "${filepath}" `"
          then
             return 1
          fi
@@ -243,6 +259,45 @@ _process_event()
 }
 
 
+run_tasks_synchronously()
+{
+   log_entry 'run_tasks_synchronously' "$@"
+
+   local tasks="$1"
+
+   local rval
+   local task
+
+   rval=0
+
+   set -f
+   for task in ${tasks}
+   do
+      set +f
+      log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
+
+      eval run_task_main "${task}"
+      rval=$?
+
+      if [ "${rval}" -ne 0 ]
+      then
+         break
+      fi
+   done
+   set +f
+
+   return $rval
+}
+
+
+__async_task_run()
+{
+   log_entry "__async_task_run" "$@"
+
+   run_tasks_synchronously "$@"
+}
+
+
 callback_and_task()
 {
    log_entry "callback_and_task" "$@"
@@ -252,46 +307,27 @@ callback_and_task()
    local filepath="$3"
    local category="$4"
 
-   local task
+   local tasks
    local rval
 
-   task="`run_callback_main "${callback}" "${action}" "${filepath}" "${category}"`"
+   tasks="`run_callback_main "${callback}" \
+                            "${action}" \
+                            "${filepath}" \
+                            "${category}"`"
    rval=$?
 
-   if [ -z "${task}" ]
+   if [ -z "${tasks}" ]
    then
       return $rval
    fi
 
-   log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
-
-   if [ "${OPTION_SYNCHRONOUS}" = "YES" ]
+   if [ "${OPTION_SYNCHRONOUS}" = 'YES' ]
    then
-      if [ "${task}" != "none" ]
-      then
-         eval run_task_main "${task}"
-         rval=$?
-      fi
-
-      if [ "${MULLE_SDE_CRAFT_AFTER_UPDATE}" = "YES" ]
-      then
-         run_task_main "craft"
-         rval=$?
-      fi
-      return $rval
+      run_tasks_synchronously "${tasks}"
+      return $?
    fi
 
-   if [ "${MULLE_SDE_CRAFT_AFTER_UPDATE}" = "YES" ]
-   then
-      if [ "${task}" != "none" ]
-      then
-         run_task_job "${task} && add_task_job craft"
-      else
-         run_task_job "add_task_job craft"
-      fi
-   else
-      eval run_task_job "${task}"
-   fi
+   eval add_task_job "__async" "${tasks}"
 }
 
 
@@ -331,7 +367,7 @@ _watch_using_fswatch()
 
       if _process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
-         if [ "${OPTION_PAUSE}" = "YES" ]
+         if [ "${OPTION_PAUSE}" = 'YES' ]
          then
             return 0
          else
@@ -395,20 +431,20 @@ _watch_using_inotifywait()
          ;;
 
          *)
-            directory="${_line%%,*}"  # not perfect but ..
+            directory="${_line%%,*}"
             _line="${_line#*,}"
          ;;
       esac
 
       case "${_line}" in
          \"*)
-            cmd="${_line%%\",*}"  # not perfect but ..
+            cmd="${_line%%\",*}"
             cmd="${cmd:1}"
             _line="${_line#*\",}"
          ;;
 
          *)
-            cmd="${_line%%,*}"  # not perfect but ..
+            cmd="${_line%%,*}"
             _line="${_line#*,}"
          ;;
       esac
@@ -426,7 +462,7 @@ _watch_using_inotifywait()
 
       if _process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
-         if [ "${OPTION_PAUSE}" = "YES" ]
+         if [ "${OPTION_PAUSE}" = 'YES' ]
          then
             return 0
          else
@@ -464,7 +500,7 @@ cleanup_monitor()
 
    local killnowait="$1"
 
-   if [ "${killnowait}" = "YES" ]
+   if [ "${killnowait}" = 'YES' ]
    then
       log_fluff "==> Kill jobs"
       local job
@@ -489,7 +525,7 @@ kill_monitor()
 {
    log_entry "kill_monitor" "$@"
 
-   cleanup_monitor "YES"
+   cleanup_monitor 'YES'
    exit 1
 }
 
@@ -500,22 +536,30 @@ prevent_superflous_monitor()
 
    if check_pid "${MONITOR_PIDFILE}"
    then
-      log_error "Another monitor seems to be already running in ${PROJECT_DIR}" >&2
-      log_info  "If this is not the case:" >&2
-      log_info  "   rm \"${MONITOR_PIDFILE}\"" >&2
-      exit 1
+      fail "Another monitor seems to be already running here
+${C_INFO}If this is not the case:
+${C_RESET_BOLD}   rm \"${MONITOR_PIDFILE#${MULLE_USER_PWD}/}\""
    fi
 
    #
    # unconditionally remove this
    #
-   if [ "${RUN_TESTS}" = "YES" ]
+   if [ "${RUN_TESTS}" = 'YES' ]
    then
       rm "${TEST_JOB_PIDFILE}" 2> /dev/null
    fi
 
    trap kill_monitor 2 3
    announce_pid $$ "${MONITOR_PIDFILE}"
+}
+
+
+# merely exists for -ld tracing
+change_working_directory()
+{
+   log_entry "change_working_directory" "$@"
+
+   exekutor cd "$1" || fail "could not cd to \"$1\""
 }
 
 
@@ -528,9 +572,13 @@ monitor_run_main()
 
    local OPTION_IGNORE_FILTER
    local OPTION_MATCH_FILTER
-   local OPTION_MONITOR_WITH_IGNORE_D="NO"
-   local OPTION_PAUSE="NO"
-   local OPTION_SYNCHRONOUS="NO"
+   local OPTION_MONITOR_WITH_IGNORE_D='NO'
+   local OPTION_PAUSE='NO'
+   local OPTION_SYNCHRONOUS='YES'
+
+   local OPTION_DIR
+
+   OPTION_DIR="${PWD}"
 
    #
    # handle options
@@ -543,11 +591,18 @@ monitor_run_main()
          ;;
 
          -a|--all)
-            OPTION_MONITOR_WITH_IGNORE_D="NO"
+            OPTION_MONITOR_WITH_IGNORE_D='NO'
+         ;;
+
+         -d)
+            [ $# -eq 1 ] && monitor_match_usage "missing argument to $1"
+            shift
+
+            OPTION_DIR="$1"
          ;;
 
          -i|--ignore)
-            OPTION_MONITOR_WITH_IGNORE_D="YES"
+            OPTION_MONITOR_WITH_IGNORE_D='YES'
          ;;
 
          -if|--ignore-filter)
@@ -565,19 +620,19 @@ monitor_run_main()
          ;;
 
          -p|--pause)
-            OPTION_PAUSE="YES"
+            OPTION_PAUSE='YES'
          ;;
 
          --no-pause)
-            OPTION_PAUSE="NO"
+            OPTION_PAUSE='NO'
          ;;
 
          -s|--synchronous)
-            OPTION_SYNCHRONOUS="YES"
+            OPTION_SYNCHRONOUS='YES'
          ;;
 
          --asynchronous)
-            OPTION_SYNCHRONOUS="NO"
+            OPTION_SYNCHRONOUS='NO'
          ;;
 
          -*)
@@ -624,12 +679,10 @@ monitor_run_main()
       MULLE_HOSTNAME="`hostname -s`"
    fi
 
-   mkdir_if_missing "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run"
-   MONITOR_PIDFILE="${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/run/monitor-pid"
+   mkdir_if_missing "${MULLE_MONITOR_VAR_DIR}/run"
+   MONITOR_PIDFILE="${MULLE_MONITOR_VAR_DIR}/run/monitor-pid"
 
-   # use physical path
-   PROJECT_DIR="`pwd -P`"
-   exekutor cd "${PROJECT_DIR}" || fail "could not cd to \"${PROJECT_DIR}\""
+   change_working_directory "${OPTION_DIR}"
 
    export MULLE_MONITOR_LIBEXEC_DIR
    export MULLE_BASHFUNCTIONS_LIBEXEC_DIR
@@ -651,7 +704,7 @@ monitor_run_main()
    prevent_superflous_monitor
 
    log_verbose "==> Start monitoring"
-   log_fluff "Edits in your directory \"${PROJECT_DIR}\" are now monitored."
+   log_fluff "Edits in your directory \"${OPTION_DIR#${MULLE_USER_PWD}/}\" are now monitored."
 
    log_info "Monitor is running. [CTRL]-[C] to quit"
 
@@ -671,11 +724,11 @@ monitor_run_main()
    local RVAL
 
    _define_patternfilefunctions "${MULLE_MONITOR_IGNORE_DIR}"  \
-                                "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/cache/ignore"
+                                "${MULLE_MONITOR_VAR_DIR}/cache/ignore"
    ignore="${_cache}"
 
    _define_patternfilefunctions "${MULLE_MONITOR_MATCH_DIR}" \
-                                "${MULLE_MONITOR_DIR}/var/${MULLE_HOSTNAME}/cache/match"
+                                "${MULLE_MONITOR_VAR_DIR}/cache/match"
    match="${_cache}"
 
    #
@@ -685,7 +738,7 @@ monitor_run_main()
    #
    local quoted_toplevel
 
-   if [ "${OPTION_MONITOR_WITH_IGNORE_D}" = "YES" ]
+   if [ "${OPTION_MONITOR_WITH_IGNORE_D}" = 'YES' ]
    then
       quoted_toplevel="`_find_toplevel_files "${ignore}"`"
       if [ -z "${quoted_toplevel}" ]

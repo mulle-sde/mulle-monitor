@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-[ "${TRACE}" = "YES" ] && set -x && : "$0" "$@"
+[ "${TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
 run_mulle_monitor()
@@ -39,6 +39,8 @@ expect_failure_mulle_monitor()
    if result="`run_mulle_monitor "$@"`"
    then
       fail "Did not fail unexpectedly"
+   else
+      log_info "Failed as expected"
    fi
 }
 
@@ -49,26 +51,39 @@ main()
 
    _options_mini_main "$@"
 
-   case "${MULLE_UNAME}" in
-     linux)
-     ;;
+   #-----------
 
-     "")
-        log_info "skip fswatch test on \"${MULLE_UNAME}\""
-        return 0
-     ;;
-   esac
+   expect_mulle_monitor ".mulle-monitor/libexec/foo-task.sh" -e task locate foo
+
+   log_verbose "----- #1 PASSED -----"
 
    #-----------
 
-   INOTIFYWAIT="${PWD}/../mock-inotifywait"
-   [ -x "${INOTIFYWAIT}" ] || fail "\"${INOTIFYWAIT}\" is missing"
-   export INOTIFYWAIT
+   expect_mulle_monitor ".mulle-monitor/libexec/bar-task.sh" -e task locate bar
 
-   MULLE_INOTIFYWAIT_REPLAY_FILE="create-src-foo-sh-replay.txt" \
-      expect_mulle_monitor "VfL Bochum 1848" -e run
+   log_verbose "----- #2 PASSED -----"
 
-   log_verbose "----- #1 PASSED -----"
+   #-----------
+
+   expect_failure_mulle_monitor -e task locate baz
+
+   log_verbose "----- #3 PASSED -----"
+
+   #-----------
+
+   expect_mulle_monitor "" -e task test foo
+
+   log_verbose "----- #4 PASSED -----"
+
+   #-----------
+
+   expect_failure_mulle_monitor -e task test bar
+
+   log_verbose "----- #5 PASSED -----"
+
+   #-----------
+
+
 
    log_info "----- ALL PASSED -----"
 }

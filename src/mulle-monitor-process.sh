@@ -108,7 +108,7 @@ announce_pid()
    local pid="$1"
    local pid_file="$2"
 
-   mkdir_if_missing "`fast_dirname "${pid_file}"`"
+   r_mkdir_parent_if_missing "${pid_file}"
    redirect_exekutor "${pid_file}" echo "${pid}" || exit 1
 }
 
@@ -146,24 +146,4 @@ check_pid()
    fi
    does_pid_exist "${old_pid}"
 }
-
-#
-# path handling
-#
-path_without_first_directory()
-{
-   case "$@" in
-      /*)
-         path_without_first_directory `echo "$@" | cut -c2-`
-         ;;
-
-      */*)
-         echo "$@" | LC_ALL=C sed 's,^[^/]*/,,'
-         ;;
-      *)
-         echo "$@"
-         ;;
-   esac
-}
-
 

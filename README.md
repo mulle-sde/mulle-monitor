@@ -31,6 +31,9 @@ to install mulle-sde.
 
 ### mulle-monitor callback
 
+Callbacks are triggered for every matching event. A callback should not use
+much time. Preferably use it to select a task, which can be coalesced with
+other events.
 
 Add a *callback* for "hello":
 
@@ -45,7 +48,7 @@ mulle-monitor -e callback install hello my-callback.py
 Remove a *callback*:
 
 ```
-mulle-monitor -e callback uninstall hello
+mulle-monitor -e callback remove hello
 ```
 
 List all *callbacks*:
@@ -58,7 +61,13 @@ mulle-monitor -e callback list
 ### mulle-monitor task
 
 A *task* is a bash script plugin. It needs to define a function
-`<task>_task_run` to be a usable task plugin.
+`<task>_task_run` to be a usable task plugin. Tasks are loaded into the
+mulle-monitor and they must be able to coexist with other tasks.
+
+Tasks can be long running. It is ensure that only one task runs at a given
+time. Multiple callbacks in quick succession are coalesced into the run of
+a single task.
+
 
 Add a sourcable shell script as a for a task "world":
 
@@ -75,7 +84,7 @@ mulle-monitor -e task install world "my-plugin.sh"
 Remove a *task* named "world":
 
 ```
-mulle-monitor -e task uninstall world
+mulle-monitor -e task remove world
 ```
 
 
@@ -170,7 +179,7 @@ mulle-monitor -e patternfile install --category special hello pattern.txt
 Remove a *patternfile*:
 
 ```
-mulle-monitor -e patternfile uninstall hello
+mulle-monitor -e patternfile remove hello
 ```
 
 List all *patternfiles*:
