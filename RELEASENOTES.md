@@ -1,3 +1,7 @@
+### 0.6.3
+
+* suppress boring warning when cleaning
+
 ### 0.6.2
 
 * added possibly ill-fated option to run tasks optonally async

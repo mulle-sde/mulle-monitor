@@ -32,7 +32,7 @@
 [ "${TRACE}" = 'YES' -o "${MULLE_MONITOR_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION=0.6.2
+MULLE_EXECUTABLE_VERSION=0.6.3
 
 #
 # This is the main user interface to mulle-monitor
@@ -165,6 +165,8 @@ monitor_match_environment()
 {
    log_entry "monitor_match_environment" "$@"
 
+   local cmd="$1"
+
    MULLE_MONITOR_MATCH_ENVIRONMENT='YES'
 
    case "${MULLE_MONITOR_MATCH_DIR}" in
@@ -181,7 +183,10 @@ monitor_match_environment()
          fi
          if [ ! -d "${MULLE_MONITOR_MATCH_DIR}" ]
          then
-            log_warning "There is no directory \"${MULLE_MONITOR_MATCH_DIR#${PWD}/}\" set up"
+         	if [ "${cmd}" != "clean" ]
+         	then
+	            log_warning "There is no directory \"${MULLE_MONITOR_MATCH_DIR#${PWD}/}\" set up"
+            fi
             MULLE_MONITOR_MATCH_DIR=""
          fi
       ;;
@@ -416,7 +421,7 @@ pass the -e flag"
 
    local rval
 
-   monitor_environment
+   monitor_environment 
 
    case "${cmd}" in
       help)
@@ -431,7 +436,7 @@ pass the -e flag"
       ;;
 
       clean|find|match|patternfile)
-         monitor_match_environment
+         monitor_match_environment "${cmd}"
 
          MULLE_USAGE_NAME="${MULLE_USAGE_NAME}" \
             exekutor "${MULLE_MATCH:-mulle-match}" \
@@ -449,7 +454,7 @@ pass the -e flag"
       ;;
 
       run)
-         monitor_match_environment
+         monitor_match_environment "${cmd}"
 
          # shellcheck source=src/mulle-monitor-run.sh
          . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-run.sh"
