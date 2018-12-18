@@ -1,3 +1,7 @@
+### 0.6.2
+
+* added possibly ill-fated option to run tasks optonally async
+
 ### 0.6.1
 
 * fix RVAL problem

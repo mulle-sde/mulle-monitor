@@ -578,8 +578,8 @@ add_task_job_sync()
    local timestamp
 
    timestamp="`date +"%s"`"
-   timestamp="`expr $timestamp + ${taskdelay%.*}`"
-   timestamp="`expr $timestamp + 1`"  # close to that date...
+   timestamp=$(( $timestamp + ${taskdelay%.*} ))
+   timestamp=$(( $timestamp + 1 ))  # close to that date...
 
    case "${MULLE_UNAME}" in
       darwin)
