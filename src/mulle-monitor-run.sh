@@ -637,7 +637,7 @@ monitor_run_main()
 
          -*)
             monitor_run_usage "Unknown option \"$1\""
-            ;;
+         ;;
 
          *)
             break

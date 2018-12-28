@@ -1,4 +1,8 @@
+# mulle-monitor
+
 🕵🏻‍ Extensible filesystem observation with callbacks
+
+![Last version](https://img.shields.io/github/tag/mulle-sde/mulle-monitor.svg)
 
 ... for Linux, OS X, FreeBSD, Windows
 
