@@ -46,6 +46,7 @@ Usage:
    A callback is executed, when there has been an interesting change in the
    filesystem. These changes are categorized by "patternfile"s and
    are used to determine the callback to execute.
+
    A callback may return a string, which will be interpreted as a "task" to
    perform. See \`${MULLE_USAGE_NAME} task help\` and
    \`${MULLE_USAGE_NAME} patternfile help\` for more information.
@@ -114,7 +115,6 @@ Usage:
 EOF
    exit 1
 }
-
 
 
 remove_callback_usage()
@@ -190,10 +190,9 @@ EOF
 }
 
 
-
-_callback_executable_install_filename()
+_r_callback_executable_install_filename()
 {
-   log_entry "_callback_executable_install_filename" "$@"
+   log_entry "_r_callback_executable_install_filename" "$@"
 
    local callback="$1"
 
@@ -205,62 +204,60 @@ _callback_executable_install_filename()
       fail "\"${callback}\" must be a-zA-Z0-9-"
    fi
 
-   _executable="${MULLE_MONITOR_DIR}/bin/${callback}-callback"
+   RVAL="${MULLE_MONITOR_ETC_DIR}/bin/${callback}-callback"
 }
 
 
-_callback_executable_filename()
+_r_callback_executable_filename()
 {
-   log_entry "_callback_executable_filename" "$@"
+   log_entry "_r_callback_executable_filename" "$@"
 
    local callback="$1"
-   local RVAL
+   local defaultcallback="$2"
 
-   [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
-
-   if [ "${callback}" = 'default' -a ! -z "${MULLE_MONITOR_DEFAULT_CALLBACK}" ]
+   if [ "${callback}" = 'default' -a ! -z "${defaultcallback}" ]
    then
-      case "${MULLE_MONITOR_DEFAULT_CALLBACK}" in
+      case "${defaultcallback}" in
          echo\ *)
-            _executable="${MULLE_MONITOR_DEFAULT_CALLBACK}"
+            log_debug "Shortcut for \"${defaultcallback}\" callback"
+            RVAL="${defaultcallback}"
             return 0
          ;;
       esac
 
-      r_absolutepath "${MULLE_MONITOR_DEFAULT_CALLBACK}"
-      _executable="${RVAL}"
+      r_absolutepath "${defaultcallback}"
    else
-      _executable="${MULLE_MONITOR_DIR}/bin/${callback}-callback"
-      if [ ! -x "${_executable}" ]
+      [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && internal_fail "MULLE_MONITOR_SHARE_DIR not set"
+
+      RVAL="${MULLE_MONITOR_ETC_DIR}/bin/${callback}-callback"
+      if [ ! -x "${RVAL}" ]
       then
-         _executable="${MULLE_MONITOR_DIR}/share/bin/${callback}-callback"
+         RVAL="${MULLE_MONITOR_SHARE_DIR}/bin/${callback}-callback"
       fi
    fi
 
-   [ -x "${_executable}" ]
+   [ -x "${RVAL}" ]
 }
 
 
-_locate_callback()
+_r_locate_callback()
 {
-   log_entry "_locate_callback" "$@"
+   log_entry "_r_locate_callback" "$@"
 
    local callback="$1"
 
-   [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
-
-   if _callback_executable_filename "${callback}"
+   if _r_callback_executable_filename "${callback}" "${MULLE_MONITOR_DEFAULT_CALLBACK}"
    then
       return 0
    fi
 
-   if [ -f "${_executable}" ]
+   if [ -f "${RVAL}" ]
    then
-      log_error "\"${_executable}\" is not executable"
+      log_error "\"${RVAL}\" is not executable"
       return 1
    fi
 
-   log_error "\"${_executable}\" not found"
+   log_error "\"${RVAL}\" not found"
    return 1
 }
 
@@ -300,17 +297,17 @@ remove_callback_main()
 
    local callback="$1"
 
-   local _executable
+   local executable
+   _r_callback_executable_install_filename "${callback}"
+   executable="${RVAL}"
 
-   _callback_executable_install_filename "${callback}"
-
-   if [ ! -e "${_executable}" ]
+   if [ ! -e "${executable}" ]
    then
-      log_warning "\"${_executable}\" does not exist."
+      log_warning "\"${executable}\" does not exist."
       return 0
    fi
 
-   remove_file_if_present "${_executable}"
+   remove_file_if_present "${executable}"
 }
 
 
@@ -325,19 +322,22 @@ add_callback_main()
    local callback="$1"
    local filename="$2"
 
+   validate_monitor_identifier "${callback}"
+
    [ -z "${filename}" ] && monitor_task_usage "missing filename"
    [ "${filename}" = "-" -o -f "${filename}" ] || fail "\"${filename}\" not found"
 
-   local _executable
+   local executable
 
-   _callback_executable_install_filename "${callback}"
+   _r_callback_executable_install_filename "${callback}"
+   executable="${RVAL}"
 
-   [ -e "${_executable}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = 'NO' ] \
-      && fail "\"${_executable}\" already exists. Use -f to clobber"
+   [ -e "${executable}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = 'NO' ] \
+      && fail "\"${executable}\" already exists. Use -f to clobber"
 
    local bindir
 
-   r_fast_dirname "${_executable}"
+   r_fast_dirname "${executable}"
    bindir="${RVAL}"
 
    if [ "${filename}" = "-" ]
@@ -346,12 +346,12 @@ add_callback_main()
 
       text="`cat`" || exit 1
       mkdir_if_missing "${bindir}" # do as late as possible
-      redirect_exekutor "${_executable}" echo "${text}"
+      redirect_exekutor "${executable}" echo "${text}"
    else
       mkdir_if_missing "${bindir}"
-      exekutor cp "${filename}" "${_executable}"
+      exekutor cp "${filename}" "${executable}"
    fi
-   exekutor chmod +x "${_executable}"
+   exekutor chmod +x "${executable}"
 }
 
 
@@ -376,9 +376,12 @@ create_callback_main()
 
    _cheap_help_options "create_callback_main"
 
-   [ "$#" -lt 1 ] && create_callback_usage
+   [ "$#" -ne 1 ] && create_callback_usage
 
-   emit_default_callback "$@" | add_callback_main "$1" "-"
+   local callback="$1"
+
+   validate_monitor_identifier "${callback}"
+   emit_default_callback "${callback}" | add_callback_main "${callback}" "-"
 }
 
 
@@ -392,17 +395,18 @@ edit_callback_main()
 
    local callback="$1"
 
-   local _executable
+   local executable
 
-   _callback_executable_install_filename "${callback}"
+   _r_callback_executable_install_filename "${callback}"
+   executable="${RVAL}"
 
-   if [ ! -e "${_executable}" ]
+   if [ ! -e "${executable}" ]
    then
-      log_warning "\"${_executable}\" does not exist."
+      log_warning "\"${executable}\" does not exist."
       return 0
    fi
 
-   ${EDITOR:-vi} "${_executable}"
+   ${EDITOR:-vi} "${executable}"
 }
 
 
@@ -418,14 +422,13 @@ locate_callback_main()
 
    local callback="$1"; shift
 
-   local _executable
 
-   if ! _locate_callback "${callback}"
+   if ! _r_locate_callback "${callback}"
    then
       return 1
    fi
 
-   rexekutor echo "${_executable#${MULLE_MONITOR_PARENT_DIR}/}"
+   rexekutor echo "${RVAL}"
 }
 
 
@@ -441,22 +444,23 @@ run_callback_main()
 
    [ -z "${callback}" ] && run_callback_usage "empty callback"
 
-   local _executable
+   local executable
 
-   if ! _locate_callback "${callback}"
+   if ! _r_locate_callback "${callback}"
    then
       return 1
    fi
+   executable="${RVAL}"
 
-   case "${_executable}" in
+   case "${executable}" in
       echo\ *)
-         rexekutor ${_executable}
+         rexekutor ${executable}
          return 0
       ;;
    esac
 
    MULLE_BASHFUNCTIONS_LIBEXEC_DIR="${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" \
-      exekutor "${_executable}" ${MULLE_MONITOR_CALLBACK_FLAGS} "$@"
+      exekutor "${executable}" ${MULLE_MONITOR_CALLBACK_FLAGS} "$@"
 }
 
 
@@ -468,23 +472,23 @@ list_callback_main()
 
    [ "$#" -ne 0 ] && list_callback_usage
 
-   if [ -d "${MULLE_MONITOR_DIR}/bin" ]
+   if [ -d "${MULLE_MONITOR_ETC_DIR}/bin" ]
    then
    (
       log_info "User Callbacks"
       log_verbose "Custom callbacks override extension callbacks of same name"
 
-      cd "${MULLE_MONITOR_DIR}/bin"
+      cd "${MULLE_MONITOR_ETC_DIR}/bin"
       ls -1 *-callback 2> /dev/null | sed -e 's/-callback$//'
    )
    fi
 
-   if [ -d "${MULLE_MONITOR_DIR}/share/bin" ]
+   if [ -d "${MULLE_MONITOR_SHARE_DIR}/bin" ]
    then
    (
       log_info "Extension Callbacks"
 
-      cd "${MULLE_MONITOR_DIR}/share/bin"
+      cd "${MULLE_MONITOR_SHARE_DIR}/bin"
       ls -1 *-callback 2> /dev/null | sed -e 's/-callback$//'
    )
    fi
@@ -503,15 +507,13 @@ cat_callback_main()
 
    [ -z "${callback}" ] && cat_callback_usage "empty callback"
 
-   local _executable
-
-   if ! _locate_callback "${callback}"
+   if ! _r_locate_callback "${callback}"
    then
       fail "Callback \"${callback}\" not found"
       return 1
    fi
 
-   exekutor cat "${callback}"
+   exekutor cat "${RVAL}"
 }
 
 
@@ -542,7 +544,7 @@ monitor_callback_main()
    [ $# -ne 0 ] && shift
 
    case "${cmd}" in
-      add|create|edit|list|locate|remove|run)
+      add|cat|create|edit|list|locate|remove|run)
          ${cmd}_callback_main "$@"
       ;;
 

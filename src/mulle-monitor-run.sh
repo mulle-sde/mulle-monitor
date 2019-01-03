@@ -40,7 +40,8 @@ monitor_run_usage()
 Usage:
    ${MULLE_USAGE_NAME} run [options]
 
-   Monitor changes in the working directory.
+   Monitor changes in the working directory. Determine which task to call
+   with callbacks. The run tasks.
 
 Options:
    -i             : monitor only non-ignored files and folders
@@ -185,7 +186,7 @@ _action_of_event_command()
 # _
 _process_event()
 {
-   log_entry "_process_event" "$@"
+   log_entry "_process_event" "${1:0:30}..." "${2:0:30}..." "$3" "$4"
 
    local ignore="$1"
    local match="$2"
@@ -199,14 +200,12 @@ _process_event()
    fi
 
    case "${filepath}" in
-      ${MULLE_MONITOR_DIR}*)
+      ${MULLE_MONITOR_PROJECT_DIR}/.mulle/var*)
          return 1
       ;;
    esac
 
    local _patternfile
-   local RVAL
-
    #
    # not as cheap. If mulle-match is our script stuff, it's too expensive
    # to fork this everytime. We use it as a library.
@@ -237,9 +236,6 @@ _process_event()
 
       *)
          if ! _patternfile="`"${MULLE_MATCH:-mulle-match}" \
-                --ignore-dir "${MULLE_MONITOR_IGNORE_DIR}" \
-                --match-dir "${MULLE_MONITOR_MATCH_DIR}" \
-                --var-dir "${MULLE_MONITOR_VAR_DIR}" \
                 --ignore-filter "${OPTION_IGNORE_FILTER}" \
                 --match-filter "${OPTION_MATCH_FILTER}" \
                 "${filepath}" `"
@@ -311,18 +307,28 @@ callback_and_task()
    local rval
 
    tasks="`run_callback_main "${callback}" \
-                            "${action}" \
-                            "${filepath}" \
-                            "${category}"`"
+                             "${action}" \
+                             "${filepath}" \
+                             "${category}"`"
    rval=$?
 
-   if [ -z "${tasks}" ]
+   if [ $rval -ne 0 -o -z "${tasks}" ]
    then
       return $rval
    fi
 
+   if [ "${tasks}" = "echo" ]
+   then
+      rexekutor echo "${filepath}"
+      return
+   fi
+
+   # don't wrap for echo
    if [ "${OPTION_SYNCHRONOUS}" = 'YES' ]
    then
+      r_add_line "${MULLE_MONITOR_PRELUDE_TASK}" "${tasks}"
+      r_add_line "${RVAL}" "${MULLE_MONITOR_CODA_TASK}"
+      tasks="${RVAL}"
       run_tasks_synchronously "${tasks}"
       return $?
    fi
@@ -341,8 +347,6 @@ _watch_using_fswatch()
    local cmd
    local workingdir
    local escaped_workingdir
-   local RVAL
-
    workingdir="`pwd -P`"
 
    r_escaped_sed_pattern "${workingdir}/"
@@ -595,7 +599,7 @@ monitor_run_main()
          ;;
 
          -d)
-            [ $# -eq 1 ] && monitor_match_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
             shift
 
             OPTION_DIR="$1"
@@ -606,17 +610,35 @@ monitor_run_main()
          ;;
 
          -if|--ignore-filter)
-            [ $# -eq 1 ] && monitor_match_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
             shift
 
             OPTION_IGNORE_FILTER="$1"
          ;;
 
          -mf|--match-filter)
-            [ $# -eq 1 ] && monitor_match_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
             shift
 
             OPTION_MATCH_FILTER="$1"
+         ;;
+
+         --craft)
+            MULLE_MONITOR_CODA_TASK="craft"
+         ;;
+
+         --prelude-task)
+            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            shift
+
+            MULLE_MONITOR_PRELUDE_TASK="$1"
+         ;;
+
+         --coda-task)
+            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            shift
+
+            MULLE_MONITOR_CODA_TASK="$1"
          ;;
 
          -p|--pause)
@@ -679,7 +701,7 @@ monitor_run_main()
       MULLE_HOSTNAME="`hostname -s`"
    fi
 
-   mkdir_if_missing "${MULLE_MONITOR_VAR_DIR}/run"
+   mkdir_if_missing "${MULLE_MONITOR_VAR_DIR}"
    MONITOR_PIDFILE="${MULLE_MONITOR_VAR_DIR}/run/monitor-pid"
 
    change_working_directory "${OPTION_DIR}"
@@ -703,6 +725,17 @@ monitor_run_main()
 
    prevent_superflous_monitor
 
+   if [ "${OPTION_SYNCHRONOUS}" = 'NO' ]
+   then
+      [ -z "${MULLE_MONITOR_PRELUDE_TASK}" ] && fail "--prelude-task requires --serial"
+      [ -z "${MULLE_MONITOR_PRELUDE_TASK}" ] && fail "--coda-task requires --serial"
+   fi
+
+   if [ ! -d "${MULLE_MONITOR_ETC_DIR}" -a ! -d "${MULLE_MONITOR_SHARE_DIR}" ]
+   then
+      MULLE_MONITOR_DEFAULT_CALLBACK="echo echo"
+   fi
+
    log_verbose "==> Start monitoring"
    log_fluff "Edits in your directory \"${OPTION_DIR#${MULLE_USER_PWD}/}\" are now monitored."
 
@@ -713,7 +746,8 @@ monitor_run_main()
       MULLE_MATCH_LIBEXEC_DIR="`"${MULLE_MATCH:-mulle-match}" libexec-dir`" || exit 1
 
       . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-environment.sh" || exit 1
-      match_environment "${MULLE_MONITOR_DIR}"
+
+      match_environment "${MULLE_MONITOR_PROJECT_DIR}"
 
       . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
    fi
@@ -721,13 +755,12 @@ monitor_run_main()
    local _cache
    local ignore
    local match
-   local RVAL
 
-   _define_patternfilefunctions "${MULLE_MONITOR_IGNORE_DIR}"  \
+   _define_patternfilefunctions "${MULLE_MATCH_SKIP_DIR}"  \
                                 "${MULLE_MONITOR_VAR_DIR}/cache/ignore"
    ignore="${_cache}"
 
-   _define_patternfilefunctions "${MULLE_MONITOR_MATCH_DIR}" \
+   _define_patternfilefunctions "${MULLE_MATCH_USE_DIR}" \
                                 "${MULLE_MONITOR_VAR_DIR}/cache/match"
    match="${_cache}"
 

@@ -53,19 +53,19 @@ main()
 
    #-----------
 
-   expect_mulle_monitor ".mulle-monitor/bin/foo-callback" -e callback locate foo
+   expect_mulle_monitor "${MULLE_EXECUTABLE_PWD}/.mulle/share/monitor/bin/foo-callback" callback locate foo
 
    log_verbose "----- #1 PASSED -----"
 
    #-----------
 
-   expect_failure_mulle_monitor  -e callback locate bar
+   expect_failure_mulle_monitor callback locate bar
 
    log_verbose "----- #2 PASSED -----"
 
    #-----------
 
-   expect_failure_mulle_monitor -e callback locate baz
+   expect_failure_mulle_monitor callback locate baz
 
    log_verbose "----- #3 PASSED -----"
 

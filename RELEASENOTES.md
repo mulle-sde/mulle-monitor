@@ -1,3 +1,14 @@
+### 0.7.1
+
+* use own .mulle folder now, no private storage of patternfiles or suc
+* readde --craft in a more general way
+
+## 0.7.0
+
+* use own .mulle folder now, no private storage of patternfiles or suc
+* readde --craft in a more general way
+
+
 ### 0.6.4
 
 * improve README.md

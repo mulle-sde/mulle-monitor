@@ -67,7 +67,7 @@ _mulle_monitor_complete()
       callback)
          case "$prev" in
             cat|remove|run)
-               list="`mulle-monitor -e -s callback list`"
+               list="`mulle-monitor -s callback list`"
                COMPREPLY=( $( compgen -W "${list}" -- "$cur" ) )
             ;;
 
@@ -84,7 +84,7 @@ _mulle_monitor_complete()
       task)
          case "$prev" in
             cat|kill|locate|ps|remove|run|status|test)
-               list="`mulle-monitor -e -s task list`"
+               list="`mulle-monitor -s task list`"
                COMPREPLY=( $( compgen -W "${list}" -- "$cur" ) )
             ;;
 

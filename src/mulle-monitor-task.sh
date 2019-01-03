@@ -102,8 +102,9 @@ add_task_usage()
 Usage:
    ${MULLE_USAGE_NAME} task add <task> <script>
 
-   Install a sourceable bash script as a mulle-sde task. You may specify '-' as
-   to read it from stdin.
+   Install a sourceable bash script as a mulle-sde task. You may specify '-'
+   as to read it from stdin. See task create for a more quick way to create
+   simple tasks.
 
    Your script should query the environment variable MULLE_FLAG_DRY_RUN and
    conditionally execute/print statements like so:
@@ -119,6 +120,27 @@ Usage:
 
       exekutor git commit -m "xxx'
 
+EOF
+   exit 1
+}
+
+
+create_task_usage()
+{
+   if [ "$#" -ne 0 ]
+   then
+      log_error "$*"
+   fi
+
+   cat <<EOF >&2
+Usage:
+   ${MULLE_USAGE_NAME} task create <task> ...
+
+   Create a task from commandline arguments. This is the simplest albeit
+   somewhat limited from of creating a task. You can then edit the task with
+   \`${MULLE_USAGE_NAME} task edit\`.
+
+   ${MULLE_USAGE_NAME} task create echo "Hello World"
 EOF
    exit 1
 }
@@ -157,61 +179,6 @@ EOF
    exit 1
 }
 
-
-test_task_usage()
-{
-   if [ "$#" -ne 0 ]
-   then
-      log_error "$*"
-   fi
-
-   cat <<EOF >&2
-Usage:
-   ${MULLE_USAGE_NAME} task test <task>
-
-   Load a task and check that the task provides an entry function called
-   <task>_task_run.
-EOF
-   exit 1
-}
-
-
-ps_task_usage()
-{
-   if [ "$#" -ne 0 ]
-   then
-      log_error "$*"
-   fi
-
-   cat <<EOF >&2
-Usage:
-   ${MULLE_USAGE_NAME} task ps
-
-   List running tasks and their pids.
-EOF
-   exit 1
-}
-
-
-create_task_usage()
-{
-   if [ "$#" -ne 0 ]
-   then
-      log_error "$*"
-   fi
-
-   cat <<EOF >&2
-Usage:
-   ${MULLE_USAGE_NAME} task create <task> ...
-
-   Create a task from commandline arguments. This is the simplest albeit
-   somewhat limited from of creating a task. You can then edit the task with
-   \`${MULLE_USAGE_NAME} task create\`.
-
-   ${MULLE_USAGE_NAME} task create echo "Hello World"
-EOF
-   exit 1
-}
 
 
 edit_task_usage()
@@ -309,6 +276,42 @@ EOF
 }
 
 
+test_task_usage()
+{
+   if [ "$#" -ne 0 ]
+   then
+      log_error "$*"
+   fi
+
+   cat <<EOF >&2
+Usage:
+   ${MULLE_USAGE_NAME} task test <task>
+
+   Load a task and check that the task provides an entry function called
+   <task>_task_run.
+EOF
+   exit 1
+}
+
+
+ps_task_usage()
+{
+   if [ "$#" -ne 0 ]
+   then
+      log_error "$*"
+   fi
+
+   cat <<EOF >&2
+Usage:
+   ${MULLE_USAGE_NAME} task ps
+
+   List running tasks and their pids.
+EOF
+   exit 1
+}
+
+
+
 #
 #
 #
@@ -396,9 +399,9 @@ r_task_plugin_install_filename()
       fail "\"${task}\" must be a-zA-Z0-9-"
    fi
 
-   [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
+   [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && internal_fail "MULLE_MONITOR_SHARE_DIR not set"
 
-   RVAL="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
+   RVAL="${MULLE_MONITOR_SHARE_DIR}/libexec/${task}-task.sh"
 }
 
 
@@ -408,7 +411,7 @@ r_task_plugin_filename()
 
    local task="$1"
 
-   [ -z "${MULLE_MONITOR_DIR}" ] && internal_fail "MULLE_MONITOR_DIR not set"
+   [ -z "${MULLE_MONITOR_ETC_DIR}" ] && internal_fail "MULLE_MONITOR_ETC_DIR not set"
 
    if [ "${task}" = 'echo' ]
    then
@@ -416,13 +419,13 @@ r_task_plugin_filename()
       return 0
    fi
 
-   RVAL="${MULLE_MONITOR_DIR}/share/libexec/${task}-task.sh"
+   RVAL="${MULLE_MONITOR_ETC_DIR}/libexec/${task}-task.sh"
    if [ -f "${RVAL}" ]
    then
       return 0
    fi
 
-   RVAL="${MULLE_MONITOR_DIR}/libexec/${task}-task.sh"
+   RVAL="${MULLE_MONITOR_SHARE_DIR}/libexec/${task}-task.sh"
    [ -f "${RVAL}" ]
 }
 
@@ -438,6 +441,8 @@ r_locate_task()
       log_error "There is no installed task \"${task}\" (${RVAL})."
       return 1
    fi
+
+   r_absolutepath "${RVAL}"
 }
 
 
@@ -446,8 +451,6 @@ _load_task()
    log_entry "_load_task" "$@"
 
    local task="$1"
-
-   local RVAL
 
    if ! r_locate_task "${task}"
    then
@@ -472,8 +475,6 @@ __require_filename()
    local filename="$2"
 
    local functionname
-   local RVAL
-
    r_task_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
@@ -516,8 +517,6 @@ remove_task_job()
 
    local task="$1"
 
-   local RVAL
-
    r_task_pidfile "${task}"
    kill_pid "${RVAL}"
 }
@@ -532,8 +531,6 @@ remember_task_rval()
 
    local taskdonefile
    local status
-   local RVAL
-
    status="failed"
    case "${rval}" in
       0)
@@ -562,8 +559,6 @@ add_task_job_sync()
    # rest commandline
 
    local taskpidfile
-   local RVAL
-
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -610,7 +605,7 @@ add_task_job_sync()
 
    local rval
 
-   PATH="${MULLE_MONITOR_DIR}/bin:${MULLE_MONITOR_DIR}/share/bin:${PATH}" \
+   PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
       eval_exekutor "$@"
    rval=$?
 
@@ -658,8 +653,6 @@ add_task_job()
    functionname="${RVAL}"
 
    local taskpidfile
-   local RVAL
-
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -695,8 +688,6 @@ run_task_job()
    local task="$1"; shift
 
    local functionname
-   local RVAL
-
    r_require_task "${task}" || exit 1
    functionname="${RVAL}"
 
@@ -742,8 +733,6 @@ run_task_main()
    taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
 
    local functionname
-   local RVAL
-
    r_require_task "${task}" || exit 1
    functionname="${RVAL}"
 
@@ -756,7 +745,7 @@ run_task_main()
    local rval
 
    announce_current_pid "${taskpidfile}"
-   PATH="${MULLE_MONITOR_DIR}/bin:${MULLE_MONITOR_DIR}/share/bin:${PATH}" \
+   PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
       "${functionname}" ${MULLE_MONITOR_TASK_FLAGS} "$@"
 
    rval=$?
@@ -775,11 +764,52 @@ cat_task_main()
 
    [ -z "${task}" ] && cat_task_usage "Empty task"
 
-   local RVAL
-
    r_locate_task "${task}" || exit 1
 
    exekutor cat "${RVAL}"
+}
+
+
+emit_default_task()
+{
+   log_entry "emit_default_task" "$@"
+
+   local task="$1"; shift
+
+   r_task_get_entry_functionname "${task}"
+
+   cat <<EOF
+#! /usr/bin/env bash
+
+#
+# This function will be called by mulle-monitor
+#
+${RVAL}()
+{
+   log_entry "${RVAL}" "\$@"
+
+   exekutor $*
+}
+
+#
+# Convenience to test your script standalone
+#
+if [ -z "\${MULLE_MONITOR_TASK_LOAD}" ]
+then
+   if [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ]
+   then
+      MULLE_BASHFUNCTIONS_LIBEXEC_DIR="\`mulle-bashfunctions-env libexec-dir 2> /dev/null\`"
+      [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ] && \\
+         echo "mulle-bashfunctions are not installed" >&2 && \\
+         exit 1
+
+      . "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-bashfunctions.sh" || exit 1
+   fi
+
+   ${RVAL} "\$@"
+fi
+
+EOF
 }
 
 
@@ -794,85 +824,40 @@ add_task_main()
    local task="$1"
    local filename="$2"
 
-   [ -z "${task}" ] && add_task_usage "Empty task"
+   validate_monitor_identifier "${task}"
+
    [ -z "${filename}" ] && add_task_usage "missing filename"
 
-   local _plugin
-   local RVAL
+   local plugin
 
    r_task_plugin_install_filename "${task}"
-   _plugin="${RVAL}"
+   plugin="${RVAL}"
 
-   [ -e "${_plugin}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = 'NO' ] \
-      && fail "\"${_plugin}\" already exists. Use -f to clobber"
+   [ -e "${plugin}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = 'NO' ] \
+      && fail "\"${plugin}\" already exists. Use -f to clobber"
 
    # check that it's valid
    local plugindir
 
-   r_fast_dirname "${_plugin}"
+   r_fast_dirname "${plugin}"
    plugindir="${RVAL}"
 
-   patternfile="${OPTION_POSITION}-${typename}--${OPTION_CATEGORY}"
    if [ "${filename}" = "-" ]
    then
       local text
 
       text="`cat`"
       mkdir_if_missing "${plugindir}" # do as late as possible
-      redirect_exekutor "${_plugin}" echo "${text}"
+      redirect_exekutor "${plugin}" echo "${text}"
    else
       (
          __require_filename "${task}" "${filename}"
       ) || exit 1
 
       mkdir_if_missing "${plugindir}"
-      exekutor cp "${filename}" "${_plugin}"
+      exekutor cp "${filename}" "${plugin}"
    fi
-   exekutor chmod -x "${_plugin}"
-}
-
-
-emit_default_task()
-{
-   log_entry "emit_default_task" "$@"
-
-   local task="$1"; shift
-
-   local RVAL
-
-   r_task_get_entry_functionname "${task}"
-
-   cat <<EOF
-#! /usr/bin/env bash
-
-#
-# This function will be called by mulle-monitor
-#
-${RVAL}()
-{
-   log_entry "${RVAL}" "\$@"
-   exekutor $*
-}
-
-#
-# Convenience to test your script standalone
-#
-if [ -z "\${MULLE_MONITOR_TASK_LOAD}" ]
-then
-   if [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ]
-   then
-      MULLE_BASHFUNCTIONS_LIBEXEC_DIR="\`mulle-bashfunctions-env libexec-dir 2> /dev/null\`"
-      [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ] && \
-         echo "mulle-bashfunctions are not installed" >&2 && \
-         exit 1
-
-      . "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-bashfunctions.sh" || exit 1
-   fi
-
-   ${RVAL} "\$@"
-fi
-
-EOF
+   exekutor chmod -x "${plugin}"
 }
 
 
@@ -884,8 +869,13 @@ create_task_main()
 
    [ "$#" -lt 1 ] && create_task_usage
 
-   emit_default_task "$@" | add_task_main "$1" "-"
+   local task="$1"; shift
+
+   validate_monitor_identifier "${task}"
+
+   emit_default_task "${task}" "$@" | add_task_main "${task}" "-"
 }
+
 
 
 edit_task_main()
@@ -899,8 +889,6 @@ edit_task_main()
    local task="$1"
 
    local _plugin
-   local RVAL
-
    r_task_plugin_install_filename "${task}"
    _plugin="${RVAL}"
 
@@ -925,8 +913,6 @@ remove_task_main()
    local task="$1"
 
    local _plugin
-   local RVAL
-
    r_task_plugin_install_filename "${task}"
    _plugin="${RVAL}"
 
@@ -946,23 +932,23 @@ list_task_main()
 
    [ "$#" -ne 0 ] && list_task_usage
 
-   if [ -d "${MULLE_MONITOR_DIR}/libexec" ]
+   if [ -d "${MULLE_MONITOR_ETC_DIR}/libexec" ]
    then
    (
       log_info "User Tasks"
       log_verbose "User tasks override extension tasks of same name"
 
-      cd "${MULLE_MONITOR_DIR}/libexec"
+      cd "${MULLE_MONITOR_ETC_DIR}/libexec"
       ls -1 *-task.sh 2> /dev/null | sed -e 's/-task\.sh//'
    )
    fi
 
-   if [ -d "${MULLE_MONITOR_DIR}/share/libexec" ]
+   if [ -d "${MULLE_MONITOR_SHARE_DIR}/libexec" ]
    then
    (
       log_info "Extension Tasks"
 
-      cd "${MULLE_MONITOR_DIR}/share/libexec"
+      cd "${MULLE_MONITOR_SHARE_DIR}/libexec"
       ls -1 *-task.sh 2> /dev/null | sed -e 's/-task\.sh//'
    )
    fi
@@ -978,8 +964,6 @@ test_task_main()
    local task="$1"
 
    [ "$#" -lt 1 ] && test_task_usage
-
-   local RVAL
 
    r_require_task "$@"
 
@@ -1004,8 +988,6 @@ status_task_main()
 
    local taskpidfile
    local taskdonefile
-   local RVAL
-
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -1038,8 +1020,6 @@ kill_task_main()
    local task="$1"
 
    local taskdonefile
-   local RVAL
-
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -1102,11 +1082,10 @@ locate_task_main()
 
    local task="$1"; shift
 
-   local RVAL
-
    r_locate_task "${task}" || exit 1
 
-   rexekutor echo "${RVAL#${MULLE_MONITOR_PARENT_DIR}/}"
+   # keep absolute for tests and ease of use
+   rexekutor echo "${RVAL}"
 }
 
 

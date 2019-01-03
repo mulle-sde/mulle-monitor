@@ -53,31 +53,31 @@ main()
 
    #-----------
 
-   expect_mulle_monitor ".mulle-monitor/libexec/foo-task.sh" -e task locate foo
+   expect_mulle_monitor "${MULLE_EXECUTABLE_PWD}/.mulle/share/monitor/libexec/foo-task.sh" task locate foo
 
    log_verbose "----- #1 PASSED -----"
 
    #-----------
 
-   expect_mulle_monitor ".mulle-monitor/libexec/bar-task.sh" -e task locate bar
+   expect_mulle_monitor "${MULLE_EXECUTABLE_PWD}/.mulle/share/monitor/libexec/bar-task.sh" task locate bar
 
    log_verbose "----- #2 PASSED -----"
 
    #-----------
 
-   expect_failure_mulle_monitor -e task locate baz
+   expect_failure_mulle_monitor task locate baz
 
    log_verbose "----- #3 PASSED -----"
 
    #-----------
 
-   expect_mulle_monitor "" -e task test foo
+   expect_mulle_monitor "" task test foo
 
    log_verbose "----- #4 PASSED -----"
 
    #-----------
 
-   expect_failure_mulle_monitor -e task test bar
+   expect_failure_mulle_monitor task test bar
 
    log_verbose "----- #5 PASSED -----"
 

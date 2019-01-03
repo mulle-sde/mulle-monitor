@@ -66,7 +66,7 @@ main()
    export INOTIFYWAIT
 
    MULLE_INOTIFYWAIT_REPLAY_FILE="create-src-foo-sh-replay.txt" \
-      expect_mulle_monitor "VfL Bochum 1848" -e run
+      expect_mulle_monitor "VfL Bochum 1848" run
 
    log_verbose "----- #1 PASSED -----"
 

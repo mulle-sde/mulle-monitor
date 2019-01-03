@@ -46,19 +46,19 @@ cat <<EOF > my-callback.py
 #!/usr/bin/env python
 print "world"
 EOF
-mulle-monitor -e callback install hello my-callback.py
+mulle-monitor callback install hello my-callback.py
 ```
 
 Remove a *callback*:
 
 ```
-mulle-monitor -e callback remove hello
+mulle-monitor callback remove hello
 ```
 
 List all *callbacks*:
 
 ```
-mulle-monitor -e callback list
+mulle-monitor callback list
 ```
 
 
@@ -82,27 +82,27 @@ world_task_run()
    echo "VfL Bochum 1848"
 }
 EOF
-mulle-monitor -e task install world "my-plugin.sh"
+mulle-monitor task install world "my-plugin.sh"
 ```
 
 Remove a *task* named "world":
 
 ```
-mulle-monitor -e task remove world
+mulle-monitor task remove world
 ```
 
 
 List all *tasks*:
 
 ```
-mulle-monitor -e task list
+mulle-monitor task list
 ```
 
 
 ### mulle-monitor run
 
 ```
-mulle-monitor -e run
+mulle-monitor run
 ```
 
 `mulle-monitor run` observes the working directory and waits for filesystem
@@ -143,7 +143,7 @@ This example lists all the files, that pass through *patternfiles* of type
 "hello":
 
 ```
-mulle-monitor -e find --match-filter "hello"
+mulle-monitor find --match-filter "hello"
 ```
 
 ### mulle-monitor match
@@ -156,7 +156,7 @@ To test your installed *patternfile* you can use `mulle-monitor match`. It
 will output the *callback* name if a file matches.
 
 ```
-mulle-monitor -e match pix/foo.png
+mulle-monitor match pix/foo.png
 ```
 
 ### mulle-monitor patternfile
@@ -170,25 +170,25 @@ Add a *patternfile* to select the *callback* "hello" for PNG files:
 
 ```
 echo "*.png" > pattern.txt
-mulle-monitor -e patternfile install hello pattern.txt
+mulle-monitor patternfile install hello pattern.txt
 ```
 
 You can optionally specify a *category* for the patternfile, which will be
 forwarded to the callback:
 
 ```
-mulle-monitor -e patternfile install --category special hello pattern.txt
+mulle-monitor patternfile install --category special hello pattern.txt
 ```
 
 Remove a *patternfile*:
 
 ```
-mulle-monitor -e patternfile remove hello
+mulle-monitor patternfile remove hello
 ```
 
 List all *patternfiles*:
 
 ```
-mulle-monitor -e patternfile list
+mulle-monitor patternfile list
 ```
 
