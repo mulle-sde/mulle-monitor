@@ -352,8 +352,7 @@ _watch_using_fswatch()
    r_escaped_sed_pattern "${workingdir}/"
    escaped_workingdir="${RVAL}"
 
-   IFS="
-"
+   IFS=$'\n'
    while read line
    do
       IFS="${DEFAULT_IFS}"
@@ -419,8 +418,7 @@ _watch_using_inotifywait()
    #
    # https://unix.stackexchange.com/questions/166546/bash-cannot-break-out-of-piped-while-read-loop-process-substitution-works
    #
-   IFS="
-"
+   IFS=$'\n'
    while read _line # directory cmd filename
    do
       IFS="${DEFAULT_IFS}"

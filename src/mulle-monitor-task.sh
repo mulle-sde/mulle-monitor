@@ -1054,8 +1054,7 @@ ps_task_main()
    then
    (
       cd "${MULLE_MONITOR_VAR_DIR}/run/monitor"
-      IFS="
-"
+      IFS=$'\n'
       for pidfile in `ls -1 *-task.pid 2> /dev/null`
       do
          task="${pidfile%-task\.pid}"
