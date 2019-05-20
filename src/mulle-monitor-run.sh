@@ -352,11 +352,8 @@ _watch_using_fswatch()
    r_escaped_sed_pattern "${workingdir}/"
    escaped_workingdir="${RVAL}"
 
-   IFS=$'\n'
-   while read line
+   while IFS=$'\n' read -r line
    do
-      IFS="${DEFAULT_IFS}"
-
       #
       # extract filepath from line and
       # make it a relative filepath
@@ -379,7 +376,6 @@ _watch_using_fswatch()
       fi
    done < <( eval_exekutor "'${FSWATCH}'" -r -x --event-flag-separator : "$@" )  # bashism
 
-   IFS="${DEFAULT_IFS}"
    return 1
 }
 
@@ -418,11 +414,8 @@ _watch_using_inotifywait()
    #
    # https://unix.stackexchange.com/questions/166546/bash-cannot-break-out-of-piped-while-read-loop-process-substitution-works
    #
-   IFS=$'\n'
-   while read _line # directory cmd filename
+   while IFS=$'\n' read -r _line # directory cmd filename
    do
-      IFS="${DEFAULT_IFS}"
-
       log_debug "${_line}"
 
       case "${_line}" in
@@ -473,7 +466,6 @@ _watch_using_inotifywait()
       fi
    done < <( eval_exekutor "'${INOTIFYWAIT}'" -q -r -m -c "$@" )  # bashism
 
-   IFS="${DEFAULT_IFS}"
    return 1
 }
 

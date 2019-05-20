@@ -1,9 +1,8 @@
-### 0.7.1
+### 0.7.2
 
-* use own .mulle folder now, no private storage of patternfiles or suc
-* readde --craft in a more general way
+* small beauty fixes in code
 
-## 0.7.0
+## 0.7.1
 
 * use own .mulle folder now, no private storage of patternfiles or suc
 * readde --craft in a more general way
