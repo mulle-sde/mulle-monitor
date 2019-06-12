@@ -1,3 +1,8 @@
+### 0.7.3
+
+*  do not depend on inotifywait/fswatch since basic functionality works without (fix for 10.6)
+
+
 ### 0.7.2
 
 * small beauty fixes in code

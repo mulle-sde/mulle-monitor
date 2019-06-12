@@ -346,7 +346,7 @@ add_callback_main()
 
       text="`cat`" || exit 1
       mkdir_if_missing "${bindir}" # do as late as possible
-      redirect_exekutor "${executable}" echo "${text}"
+      redirect_exekutor "${executable}" printf "%s\n" "${text}"
    else
       mkdir_if_missing "${bindir}"
       exekutor cp "${filename}" "${executable}"
@@ -364,7 +364,7 @@ emit_default_callback()
    cat <<EOF
 #! /usr/bin/env bash
 
-echo "${callback}"
+printf "%s\n" "${callback}"
 
 EOF
 }
@@ -428,7 +428,7 @@ locate_callback_main()
       return 1
    fi
 
-   rexekutor echo "${RVAL}"
+   rexekutor printf "%s\n" "${RVAL}"
 }
 
 

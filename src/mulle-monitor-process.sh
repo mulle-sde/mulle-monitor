@@ -109,7 +109,7 @@ announce_pid()
    local pid_file="$2"
 
    r_mkdir_parent_if_missing "${pid_file}"
-   redirect_exekutor "${pid_file}" echo "${pid}" || exit 1
+   redirect_exekutor "${pid_file}" printf "%s\n" "${pid}" || exit 1
 }
 
 

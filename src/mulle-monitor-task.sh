@@ -51,11 +51,11 @@ task_print_commands()
    status     : get status of running or last ran task
    test       : load task and check that the required main function is present"
 
-   echo "${SHOWN_COMMANDS}"
+   printf "%s\n" "${SHOWN_COMMANDS}"
 
    if [ "${show_all}" != 'NO' ]
    then
-      echo "${HIDDEN_COMMANDS}"
+      printf "%s\n" "${HIDDEN_COMMANDS}"
    fi
 }
 
@@ -546,7 +546,7 @@ remember_task_rval()
    taskdonefile="${RVAL}"
    r_fast_dirname "${taskdonefile}"
    mkdir_if_missing "${RVAL}"
-   redirect_exekutor "${taskdonefile}" echo "${status}"
+   redirect_exekutor "${taskdonefile}" printf "%s\n" "${status}"
 }
 
 
@@ -848,7 +848,7 @@ add_task_main()
 
       text="`cat`"
       mkdir_if_missing "${plugindir}" # do as late as possible
-      redirect_exekutor "${plugin}" echo "${text}"
+      redirect_exekutor "${plugin}" printf "%s\n" "${text}"
    else
       (
          __require_filename "${task}" "${filename}"
@@ -1063,7 +1063,7 @@ ps_task_main()
          then
             pid=""
          fi
-         echo "$pid" "${task}"
+         printf "%s\n" "$pid" "${task}"
       done
    )
    fi
@@ -1084,7 +1084,7 @@ locate_task_main()
    r_locate_task "${task}" || exit 1
 
    # keep absolute for tests and ease of use
-   rexekutor echo "${RVAL}"
+   rexekutor printf "%s\n" "${RVAL}"
 }
 
 
