@@ -108,7 +108,7 @@ check_fswatch()
       ;;
    esac
 
-   fail "To use monitor you have to install the prerequisite \"fswatch\":
+   fail "To use \"${MULLE_USAGE_NAME} run\" you have to install the prerequisite \"fswatch\":
 ${C_BOLD}${C_RESET}   ${info}
 ${C_INFO}You then need to exit ${MULLE_USAGE_NAME} and reenter it."
 }
@@ -138,7 +138,7 @@ check_inotifywait()
       ;;
    esac
 
-   fail "To use monitor you have to install the prerequisite \"inotifywait\":
+   fail "To use \"${MULLE_USAGE_NAME} run\" you have to install the prerequisite \"inotifywait\":
 ${C_BOLD}${C_RESET}   ${info}
 ${C_INFO}You then need to exit ${MULLE_USAGE_NAME} and reenter it."
 }
@@ -319,7 +319,7 @@ callback_and_task()
 
    if [ "${tasks}" = "echo" ]
    then
-      rexekutor echo "${filepath}"
+      rexekutor printf "%s\n" "${filepath}"
       return
    fi
 
@@ -363,7 +363,7 @@ _watch_using_fswatch()
 
       [ -z "${_filepath}" ] && internal_fail "failed to parse \"${line}\""
 
-      cmd="`echo "${line}" | LC_ALL=C sed 's/^\(.*\) \(.*\)$/\2/' | tr '[a-z]' '[A-Z]'`"
+      cmd="`printf "%s\n" "${line}" | LC_ALL=C sed 's/^\(.*\) \(.*\)$/\2/' | tr '[a-z]' '[A-Z]'`"
 
       if _process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then

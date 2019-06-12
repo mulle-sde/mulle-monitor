@@ -17,10 +17,8 @@ LANGUAGE="bash"             # c,cpp, objc, bash ...
 # DEPENDENCIES and BUILD_DEPENDENCIES will be evaled later!
 # So keep them single quoted.
 #
-DEPENDENCIES='${MULLE_SDE_TAP}mulle-match
-fswatch
-'
+DEPENDENCIES='${MULLE_SDE_TAP}mulle-match'
 
-DEBIAN_DEPENDENCIES="inotify-tools, mulle-match"
+DEBIAN_DEPENDENCIES="mulle-match"
 
 
