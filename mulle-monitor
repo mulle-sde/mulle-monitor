@@ -205,7 +205,7 @@ monitor_environment()
    r_absolutepath "${directory}"
    MULLE_MONITOR_PROJECT_DIR="${RVAL}"
 
-   eval `( cd "${MULLE_MONITOR_PROJECT_DIR}" ; mulle-env mulle-tool-env monitor )`
+   eval `( cd "${MULLE_MONITOR_PROJECT_DIR}" ; "${MULLE_ENV:-mulle-env}" mulle-tool-env monitor )` || exit 1
 
    MULLE_MONITOR_SLEEP_EXE=sleep
 
