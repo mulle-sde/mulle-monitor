@@ -337,7 +337,7 @@ add_callback_main()
 
    local bindir
 
-   r_fast_dirname "${executable}"
+   r_dirname "${executable}"
    bindir="${RVAL}"
 
    if [ "${filename}" = "-" ]

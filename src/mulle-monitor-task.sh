@@ -544,7 +544,7 @@ remember_task_rval()
 
    r_task_donefile "${task}"
    taskdonefile="${RVAL}"
-   r_fast_dirname "${taskdonefile}"
+   r_dirname "${taskdonefile}"
    mkdir_if_missing "${RVAL}"
    redirect_exekutor "${taskdonefile}" printf "%s\n" "${status}"
 }
@@ -839,7 +839,7 @@ add_task_main()
    # check that it's valid
    local plugindir
 
-   r_fast_dirname "${plugin}"
+   r_dirname "${plugin}"
    plugindir="${RVAL}"
 
    if [ "${filename}" = "-" ]
