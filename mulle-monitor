@@ -32,7 +32,7 @@
 [ "${TRACE}" = 'YES' -o "${MULLE_MONITOR_TRACE}" = 'YES' ] && set -x && : "$0" "$@"
 
 
-MULLE_EXECUTABLE_VERSION=0.7.3
+MULLE_EXECUTABLE_VERSION=0.8.0
 
 #
 # This is the main user interface to mulle-monitor
@@ -205,7 +205,7 @@ monitor_environment()
    r_absolutepath "${directory}"
    MULLE_MONITOR_PROJECT_DIR="${RVAL}"
 
-   eval `( cd "${MULLE_MONITOR_PROJECT_DIR}" ; "${MULLE_ENV:-mulle-env}" mulle-tool-env monitor )` || exit 1
+   eval `( cd "${MULLE_MONITOR_PROJECT_DIR}" ; "${MULLE_ENV:-mulle-env}" -N mulle-tool-env monitor )` || exit 1
 
    MULLE_MONITOR_SLEEP_EXE=sleep
 
@@ -365,7 +365,6 @@ main()
          MULLE_USAGE_NAME="${MULLE_USAGE_NAME}" \
             exekutor "${MULLE_MATCH:-mulle-match}" \
                            ${MULLE_TECHNICAL_FLAGS} \
-                           ${MULLE_MATCH_FLAGS} \
                         "${cmd}" \
                            "$@"
       ;;
@@ -469,4 +468,16 @@ _init()
 
 
 _init "$@" # needs params
-main "$@"
+
+quote="'"
+args=""
+for arg in "$@"
+do
+   arg="${arg//${quote}/${quote}\"${quote}\"${quote}}"
+   args="${args} '${arg}'"
+done
+
+unset quote
+unset arg
+
+eval main "${MULLE_MONITOR_FLAGS}" "${args}"

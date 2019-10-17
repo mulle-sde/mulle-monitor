@@ -1,3 +1,10 @@
+## 0.8.0
+
+* changed to mulle-bashfunctions 2 call convention
+* moved to mulle-bashfunctions v2
+* ask mulle-env for the location of ETC SHARE and VAR directories
+
+
 ### 0.7.3
 
 *  do not depend on inotifywait/fswatch since basic functionality works without (fix for 10.6)

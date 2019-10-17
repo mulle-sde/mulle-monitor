@@ -733,6 +733,7 @@ run_task_main()
    taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
 
    local functionname
+
    r_require_task "${task}" || exit 1
    functionname="${RVAL}"
 
@@ -746,9 +747,9 @@ run_task_main()
 
    announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
-      "${functionname}" ${MULLE_MONITOR_TASK_FLAGS} "$@"
-
+      exekutor "${functionname}" ${MULLE_MONITOR_TASK_FLAGS} "$@"
    rval=$?
+
    remember_task_rval "${task}" "${rval}"
    done_pid "${taskpidfile}"
 

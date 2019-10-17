@@ -93,7 +93,7 @@ kill_pid()
    old_pid="`get_pid "${pid_file}"`"
    if [ ! -z "${old_pid}" ]
    then
-      log_verbose "Killing pid: ${old_pid}"
+      log_verbose "Killing pid: ${old_pid} ($pid_file)"
       kill "${old_pid}" 2> /dev/null
    fi
 
