@@ -162,7 +162,6 @@ EOF
    exit 1
 }
 
-
 list_task_usage()
 {
    if [ "$#" -ne 0 ]
@@ -172,13 +171,18 @@ list_task_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} task list
+   ${MULLE_USAGE_NAME} callback list [options]
 
    List installed tasks.
+
+Options:
+   --output-name : output the name of the task (default)
+   --output-path : output the location of the task in the filesystem
+   --cat         : show contents of the task (assumed to be a shellscript)
+
 EOF
    exit 1
 }
-
 
 
 edit_task_usage()
@@ -927,31 +931,96 @@ remove_task_main()
 }
 
 
+list_tasks()
+{
+   local directory="$1"
+   local mode="$2"
+
+   (
+      rexekutor cd "${directory}" || exit 1
+
+      local filename
+
+      shopt -s nullglob
+      IFS=$'\n'
+      for filename in *-task.sh
+      do
+         case "${mode}" in
+            'output-name')
+               printf "   %s\n" "${filename%-task.sh}"
+               continue
+            ;;
+
+            'output-path')
+               printf "   %s/%s\n" "${directory#${MULLE_USER_PWD}/}" "${filename}"
+            ;;
+
+            'output-cat')
+               log_info "${C_RESET_BOLD}   ${filename%-task.sh}:"
+               sed -e '/^#/d' -e '/^$/d' -e 's/^/     /' "${filename}"
+               echo
+            ;;
+
+            *)
+               internal_fail "unknown mode \"${mode}\""
+            ;;
+         esac
+      done
+   )
+}
+
+
 list_task_main()
 {
    log_entry "list_task_main" "$@"
+
+   local OPTION_MODE="output-name"
+
+   while :
+   do
+      case "$1" in
+         -h*|--help|help)
+            list_task_usage
+         ;;
+
+         --output-path)
+            OPTION_MODE='output-path'
+         ;;
+
+         --output-cat|--cat)
+            OPTION_MODE="output-cat"
+         ;;
+
+         -*)
+            list_task_usage "Unknown option \"$1\""
+         ;;
+
+         *)
+            break
+         ;;
+      esac
+
+      shift
+   done
+
 
    [ "$#" -ne 0 ] && list_task_usage
 
    if [ -d "${MULLE_MONITOR_ETC_DIR}/libexec" ]
    then
-   (
       log_info "User Tasks"
       log_verbose "User tasks override extension tasks of same name"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/libexec"
 
-      cd "${MULLE_MONITOR_ETC_DIR}/libexec"
-      ls -1 *-task.sh 2> /dev/null | sed -e 's/-task\.sh//'
-   )
+      list_tasks "${MULLE_MONITOR_ETC_DIR}/libexec" "${OPTION_MODE}"
    fi
 
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/libexec" ]
    then
-   (
       log_info "Extension Tasks"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/libexec"
 
-      cd "${MULLE_MONITOR_SHARE_DIR}/libexec"
-      ls -1 *-task.sh 2> /dev/null | sed -e 's/-task\.sh//'
-   )
+      list_tasks "${MULLE_MONITOR_SHARE_DIR}/libexec" "${OPTION_MODE}"
    fi
 }
 

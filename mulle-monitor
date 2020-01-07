@@ -343,6 +343,7 @@ main()
    then
       MULLE_VIRTUAL_ROOT="`pwd -P`"
       [ "${MULLE_VIRTUAL_ROOT}" = "/" ] && fail "MULLE_VIRTUAL_ROOT must not be /"
+      log_fluff "mulle-monitor sets MULLE_VIRTUAL_ROOT to \"${MULLE_VIRTUAL_ROOT}\""
    fi
 
    local rval

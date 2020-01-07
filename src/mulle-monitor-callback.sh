@@ -144,9 +144,14 @@ list_callback_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} callback list
+   ${MULLE_USAGE_NAME} callback list [options]
 
    List installed callbacks.
+
+Options:
+   --output-name : output the name of the callback (default)
+   --output-path : output the location of the callback in the filesystem
+   --cat         : show contents of the callback (assumed to be a shellscript)
 
 EOF
    exit 1
@@ -464,33 +469,94 @@ run_callback_main()
 }
 
 
+list_callbacks()
+{
+   local directory="$1"
+   local mode="$2"
+
+   (
+      cd "${directory}" || exit 1
+
+      local filename
+
+      shopt -s nullglob
+      for filename in *-callback
+      do
+         case "${mode}" in
+            'output-name')
+               printf "   %s\n" "${filename%-callback}"
+               continue
+            ;;
+
+            'output-path')
+               printf "   %s/%s\n" "${directory#${MULLE_USER_PWD}/}" "${filename}"
+            ;;
+
+            'output-cat')
+               log_info "${C_RESET_BOLD}   ${filename%-callback}:"
+               sed -e '/^#/d' -e '/^$/d' -e 's/^/     /' "${filename}"
+               echo
+            ;;
+
+            *)
+               internal_fail "unknown mode \"${mode}\""
+            ;;
+         esac
+      done
+   )
+}
+
+
 list_callback_main()
 {
    log_entry "list_callback_main" "$@"
 
-   _cheap_help_options "list_callback_usage"
+   local OPTION_MODE="output-name"
+
+   while :
+   do
+      case "$1" in
+         -h*|--help|help)
+            list_callback_usage
+         ;;
+
+         --output-path)
+            OPTION_MODE='output-path'
+         ;;
+
+         --output-cat|--cat)
+            OPTION_MODE="output-cat"
+         ;;
+
+         -*)
+            list_callback_usage "Unknown option \"$1\""
+         ;;
+
+         *)
+            break
+         ;;
+      esac
+
+      shift
+   done
+
 
    [ "$#" -ne 0 ] && list_callback_usage
 
    if [ -d "${MULLE_MONITOR_ETC_DIR}/bin" ]
    then
-   (
       log_info "User Callbacks"
       log_verbose "Custom callbacks override extension callbacks of same name"
-
-      cd "${MULLE_MONITOR_ETC_DIR}/bin"
-      ls -1 *-callback 2> /dev/null | sed -e 's/-callback$//'
-   )
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/bin"
+      list_callbacks "${MULLE_MONITOR_ETC_DIR}/bin" "${OPTION_MODE}"
    fi
 
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/bin" ]
    then
-   (
       log_info "Extension Callbacks"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_SHARE_DIR#${MULLE_USER_PWD}/}/bin"
 
-      cd "${MULLE_MONITOR_SHARE_DIR}/bin"
-      ls -1 *-callback 2> /dev/null | sed -e 's/-callback$//'
-   )
+      list_callbacks "${MULLE_MONITOR_SHARE_DIR}/bin" "${OPTION_MODE}"
    fi
 }
 
