@@ -45,8 +45,9 @@ Usage:
 
 Options:
    -i             : monitor only non-ignored files and folders
-   -if <filter>   : specify a filter for ignoring <type>
-   -mf <filter>   : specify a filter for matching <type>
+   -tf <filter>   : specify a filter for matching <type>
+   -cf <filter>   : specify a filter for matching <category>
+
 EOF
    if [ "${MULLE_FLAG_LOG_VERBOSE}" ]
    then
@@ -236,8 +237,8 @@ _process_event()
 
       *)
          if ! _patternfile="`"${MULLE_MATCH:-mulle-match}" \
-                --ignore-filter "${OPTION_IGNORE_FILTER}" \
-                --match-filter "${OPTION_MATCH_FILTER}" \
+                --type-filter "${OPTION_MATCH_TYPE_FILTER}" \
+                --category-filter "${OPTION_MATCH_CATEGORY_FILTER}" \
                 "${filepath}" `"
          then
             return 1
@@ -564,8 +565,8 @@ monitor_run_main()
 {
    log_entry "monitor_run_main" "$@"
 
-   local OPTION_IGNORE_FILTER
-   local OPTION_MATCH_FILTER
+   local OPTION_MATCH_TYPE_FILTER
+   local OPTION_MATCH_CATEGORY_FILTER
    local OPTION_MONITOR_WITH_IGNORE_D='NO'
    local OPTION_PAUSE='NO'
    local OPTION_SYNCHRONOUS='YES'
@@ -599,18 +600,19 @@ monitor_run_main()
             OPTION_MONITOR_WITH_IGNORE_D='YES'
          ;;
 
-         -if|--ignore-filter)
+         -mf|--match-filter|--tf|--type-filter)
             [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
             shift
 
-            OPTION_IGNORE_FILTER="$1"
+            OPTION_MATCH_TYPE_FILTER="$1"
          ;;
 
-         -mf|--match-filter)
+
+         -cf|--category-filter)
             [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
             shift
 
-            OPTION_MATCH_FILTER="$1"
+            OPTION_MATCH_IGNORE_FILTER="$1"
          ;;
 
          --craft)
