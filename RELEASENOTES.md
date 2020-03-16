@@ -1,3 +1,9 @@
+## 0.9.0
+
+* added category filter
+* improved *list* sub-command for **task** and **callback**
+
+
 ## 0.8.0
 
 * changed to mulle-bashfunctions 2 call convention
