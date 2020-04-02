@@ -479,6 +479,7 @@ __require_filename()
    local filename="$2"
 
    local functionname
+
    r_task_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
