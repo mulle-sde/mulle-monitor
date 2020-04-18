@@ -1,3 +1,7 @@
+### 0.9.1
+
+* installer verbose toggle
+
 ## 0.9.0
 
 * added category filter
