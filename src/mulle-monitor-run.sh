@@ -214,9 +214,9 @@ _process_event()
    case "${MULLE_MATCH}" in
       ""|*/mulle-match)
 
-         if ! [ -z "${MULLE_MATCH_MATCH_SH}" ]
+         if ! [ -z "${MULLE_MATCH_FILENAME_SH}" ]
          then
-            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
+            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-filename.sh" || exit 1
          fi
 
          # returns 0,1,2
@@ -733,7 +733,7 @@ monitor_run_main()
 
    log_info "Monitor is running. [CTRL]-[C] to quit"
 
-   if [ -z "${MULLE_MATCH_MATCH_SH}" ]
+   if [ -z "${MULLE_MATCH_FILENAME_SH}" ]
    then
       MULLE_MATCH_LIBEXEC_DIR="`"${MULLE_MATCH:-mulle-match}" libexec-dir`" || exit 1
 
@@ -741,7 +741,7 @@ monitor_run_main()
 
       match_environment "${MULLE_MONITOR_PROJECT_DIR}"
 
-      . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-match.sh" || exit 1
+      . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-filename.sh" || exit 1
    fi
 
    local _cache
