@@ -350,7 +350,8 @@ r_task_donefile()
 
    local task="$1"
 
-   RVAL="${MULLE_MONITOR_VAR_DIR}/run/monitor/${task}-task"
+   r_identifier "${task}"
+   RVAL="${MULLE_MONITOR_VAR_DIR}/run/monitor/${RVAL}-task"
 }
 
 
@@ -360,7 +361,8 @@ r_task_pidfile()
 
    local task="$1"
 
-   RVAL="${MULLE_MONITOR_VAR_DIR}/run/monitor/${task}-task.pid"
+   r_identifier "${task}"
+   RVAL="${MULLE_MONITOR_VAR_DIR}/run/monitor/${RVAL}-task.pid"
 }
 
 
@@ -380,10 +382,8 @@ r_task_get_entry_functionname()
 
    [ -z "${task}" ] && internal_fail "empty task"
 
-   local taskidentifier
-
-   taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
-   RVAL="${taskidentifier}_task_run"
+   r_identifier "${task}"
+   RVAL="${RVAL}_task_run"
 
    log_debug "task functionname: \"${RVAL}\""
 }
@@ -395,10 +395,8 @@ r_task_plugin_install_filename()
 
    local task="$1"
 
-   local name
-
-   name="`tr -c '[a-zA-Z0-9-\n]' '_' <<< "${task}"`"
-   if [ "${name}" != "${task}" ]
+   r_identifier "${task//_/+}"  # make underscores fail too
+   if [ "${RVAL}" != "${task}" ]
    then
       fail "\"${task}\" must be a-zA-Z0-9-"
    fi
@@ -549,8 +547,8 @@ remember_task_rval()
 
    r_task_donefile "${task}"
    taskdonefile="${RVAL}"
-   r_dirname "${taskdonefile}"
-   mkdir_if_missing "${RVAL}"
+
+   r_mkdir_parent_if_missing "${taskdonefile}"
    redirect_exekutor "${taskdonefile}" printf "%s\n" "${status}"
 }
 
@@ -564,6 +562,7 @@ add_task_job_sync()
    # rest commandline
 
    local taskpidfile
+
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -658,6 +657,7 @@ add_task_job()
    functionname="${RVAL}"
 
    local taskpidfile
+
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -733,10 +733,6 @@ run_task_main()
 
    shift
 
-   local taskidentifier
-
-   taskidentifier="`tr -c '[a-zA-Z0-9_\n]' '_' <<< "${task}"`"
-
    local functionname
 
    r_require_task "${task}" || exit 1
@@ -746,6 +742,7 @@ run_task_main()
 
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
+
    kill_pid "${taskpidfile}"
 
    local rval
@@ -1059,6 +1056,7 @@ status_task_main()
 
    local taskpidfile
    local taskdonefile
+
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 
@@ -1091,6 +1089,7 @@ kill_task_main()
    local task="$1"
 
    local taskdonefile
+
    r_task_pidfile "${task}"
    taskpidfile="${RVAL}"
 

@@ -203,8 +203,8 @@ _r_callback_executable_install_filename()
 
    local name
 
-   name="`tr -c '[a-zA-Z0-9-\n]' '_' <<< "${callback}"`"
-   if [ "${name}" != "${callback}" ]
+   r_identifier "${callback//_/+}"  # make underscores fail too
+   if [ "${RVAL}" != "${callback}" ]
    then
       fail "\"${callback}\" must be a-zA-Z0-9-"
    fi
