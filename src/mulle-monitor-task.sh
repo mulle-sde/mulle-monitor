@@ -454,18 +454,22 @@ _load_task()
 
    local task="$1"
 
+
+   local filename
    if ! r_locate_task "${task}"
    then
       exit 1
    fi
+   filename="${RVAL}"
 
-   if [ "${RVAL}" = 'echo' ]
+   if [ "${filename}" = 'echo' ]
    then
       return 0
    fi
 
    # scripts can skip some test code here if MULLE_MONITOR_TASK_LOAD is set
-   MULLE_MONITOR_TASK_LOAD='YES' . "${RVAL}" || exit 1
+   log_debug "Include \"${filename}\""
+   MULLE_MONITOR_TASK_LOAD='YES' . "${filename}" || fail  "\"${filename}\" failed on include"
 }
 
 
@@ -481,11 +485,11 @@ __require_filename()
    r_task_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
-   unset -f "${functionname}"
+   unshell_disable_glob "${functionname}"
 
    . "${filename}" 2> /dev/null || fail "\"${filename}\" is not a valid bash script"
 
-   if [ "`type -t "${functionname}"`" != "function" ]
+   if ! shell_is_function "${functionname}"
    then
       fail "\"${filename}\" does not define function \"${functionname}\""
    fi
@@ -503,7 +507,7 @@ r_require_task()
    r_task_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
-   if [ "`type -t "${functionname}"`" != "function" ]
+   if ! shell_is_function "${functionname}"
    then
       _load_task "${task}"
    fi
@@ -533,11 +537,12 @@ remember_task_rval()
    local rval="$2"
 
    local taskdonefile
-   local status
-   status="failed"
+   local taskstatus
+
+   taskstatus="failed"
    case "${rval}" in
       0)
-         status="done"
+         taskstatus="done"
       ;;
 
       "")
@@ -549,7 +554,7 @@ remember_task_rval()
    taskdonefile="${RVAL}"
 
    r_mkdir_parent_if_missing "${taskdonefile}"
-   redirect_exekutor "${taskdonefile}" printf "%s\n" "${status}"
+   redirect_exekutor "${taskdonefile}" printf "%s\n" "${taskstatus}"
 }
 
 
@@ -939,7 +944,7 @@ list_tasks()
 
       local filename
 
-      shopt -s nullglob
+      shell_enable_nullglob
       IFS=$'\n'
       for filename in *-task.sh
       do
@@ -1035,11 +1040,10 @@ test_task_main()
 
    r_require_task "$@"
 
-   if [ "`type -t "${RVAL}"`" != "function" ]
+   if ! shell_is_function "${RVAL}"
    then
       fail "\"${task}\" does not define function \"${RVAL}\""
    fi
-
    return 0
 }
 

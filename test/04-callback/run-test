@@ -9,7 +9,11 @@ run_mulle_monitor()
    echo mulle-monitor ${MULLE_MONITOR_FLAGS} "$@"  >&2
    echo "####################################" >&2
 
-   mulle-monitor ${MULLE_MONITOR_FLAGS} "$@" || fail "\`mulle-monitor $*\` failed"
+   (
+      MULLE_MONITOR_LIBEXEC_DIR="`${MULLE_MONITOR} libexec-dir`"
+
+      . "${MULLE_MONITOR}" ${MULLE_MONITOR_FLAGS} "$@"
+   )
 }
 
 
@@ -49,7 +53,7 @@ main()
 {
    MULLE_MONITOR_FLAGS="$@"
 
-   _options_mini_main "$@"
+   _options_mini_main "$@" && set -x
 
    #-----------
 

@@ -479,7 +479,7 @@ list_callbacks()
 
       local filename
 
-      shopt -s nullglob
+      shell_enable_nullglob
       for filename in *-callback
       do
          case "${mode}" in

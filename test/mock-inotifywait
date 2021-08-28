@@ -20,6 +20,8 @@ _init()
 }
 
 
+MULLE_EXECUTABLE="${MULLE_EXECUTABLE:-${BASH_SOURCE[0]:-${(%):-%x}}}"
+
 _init "$@"
 
 main "$@"

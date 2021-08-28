@@ -267,10 +267,10 @@ run_tasks_synchronously()
 
    rval=0
 
-   set -f
+   shell_disable_glob
    for task in ${tasks}
    do
-      set +f
+      shell_enable_glob
       log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
 
       eval run_task_main "${task}"
@@ -281,7 +281,7 @@ run_tasks_synchronously()
          break
       fi
    done
-   set +f
+   shell_enable_glob
 
    return $rval
 }
