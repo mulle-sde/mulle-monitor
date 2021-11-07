@@ -560,9 +560,13 @@ remember_task_rval()
 
 add_task_job_sync()
 {
-   local task="$1" ; shift
-   local sleepexe="$1"; shift
-   local taskdelay="$1" ; shift
+   log_entry "add_task_job_sync" "$@"
+
+   local task="$1" 
+   local sleepexe="$2"
+   local taskdelay="$3" 
+
+   shift 3
 
    # rest commandline
 

@@ -251,7 +251,8 @@ _r_locate_callback()
 
    local callback="$1"
 
-   if _r_callback_executable_filename "${callback}" "${MULLE_MONITOR_DEFAULT_CALLBACK}"
+   if _r_callback_executable_filename "${callback}" \
+                                      "${MULLE_MONITOR_DEFAULT_CALLBACK}"
    then
       return 0
    fi
@@ -263,6 +264,7 @@ _r_locate_callback()
    fi
 
    log_error "\"${RVAL}\" not found"
+   RVAL=
    return 1
 }
 
