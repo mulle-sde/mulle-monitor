@@ -55,6 +55,9 @@ main()
 
    _options_mini_main "$@" && set -x
 
+   # for mingw for a text file to be executable with rwxr.xr.x the file
+   # must have a #! /bin/sh in front. remove it and it becomes rw.r..r..
+
    #-----------
 
    expect_mulle_monitor "${MULLE_EXECUTABLE_PWD}/.mulle/share/monitor/bin/foo-callback" callback locate foo
