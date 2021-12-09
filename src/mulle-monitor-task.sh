@@ -614,6 +614,9 @@ add_task_job_sync()
    # depending on the setup, we may now want to hide the current pid
    # so it doesn't get killed (need a locking scheme ?)
    #
+   log_verbose "Execute task \"${1#${MULLE_USER_PWD}/}\""
+
+
    log_fluff "==> Starting${modifier}task"
 
    local rval
@@ -755,6 +758,8 @@ run_task_main()
    kill_pid "${taskpidfile}"
 
    local rval
+
+   log_verbose "Execute task \"${functionname#${MULLE_USER_PWD}/}\""
 
    announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
