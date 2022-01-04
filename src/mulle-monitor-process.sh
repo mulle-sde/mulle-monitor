@@ -33,9 +33,9 @@ MULLE_MONITOR_PROCESS_SH="included"
 
 # obscure
 # this works, when you execute
-# get_current_pid in back ticks
+# monitor::process::get_current_pid in back ticks
 #
-get_current_pid()
+monitor::process::get_current_pid()
 {
    sh -c 'echo $PPID'
 }
@@ -44,9 +44,9 @@ get_current_pid()
 #
 # pid handling
 #
-get_pid()
+monitor::process::get_pid()
 {
-   log_entry "get_pid" "$@"
+   log_entry "monitor::process::get_pid" "$@"
 
    local pid_file="$1"
 
@@ -54,9 +54,9 @@ get_pid()
 }
 
 
-does_pid_exist()
+monitor::process::does_pid_exist()
 {
-   log_entry "does_pid_exist" "$@"
+   log_entry "monitor::process::does_pid_exist" "$@"
 
    local pid="$1"
 
@@ -72,9 +72,9 @@ does_pid_exist()
 }
 
 
-done_pid()
+monitor::process::done_pid()
 {
-   log_entry "done_pid" "$@"
+   log_entry "monitor::process::done_pid" "$@"
 
    local pid_file="$1"
 
@@ -82,28 +82,28 @@ done_pid()
 }
 
 
-kill_pid()
+monitor::process::kill_pid()
 {
-   log_entry "kill_pid" "$@"
+   log_entry "monitor::process::kill_pid" "$@"
 
    local pid_file="$1"
 
    local old_pid
 
-   old_pid="`get_pid "${pid_file}"`"
+   old_pid="`monitor::process::get_pid "${pid_file}"`"
    if [ ! -z "${old_pid}" ]
    then
       log_verbose "Killing pid: ${old_pid} ($pid_file)"
       kill "${old_pid}" 2> /dev/null
    fi
 
-   done_pid "${pid_file}"
+   monitor::process::done_pid "${pid_file}"
 }
 
 
-announce_pid()
+monitor::process::announce_pid()
 {
-   log_entry "announce_pid" "$@"
+   log_entry "monitor::process::announce_pid" "$@"
 
    local pid="$1"
    local pid_file="$2"
@@ -113,9 +113,9 @@ announce_pid()
 }
 
 
-announce_current_pid()
+monitor::process::announce_current_pid()
 {
-   log_entry "announce_pid" "$@"
+   log_entry "monitor::process::announce_current_pid" "$@"
 
    local pid_file="$1"
 
@@ -127,23 +127,23 @@ announce_current_pid()
    else
       pid="${BASHPID}"
    fi
-   announce_pid "${pid}" "$1"
+   monitor::process::announce_pid "${pid}" "$1"
 }
 
 
-check_pid()
+monitor::process::check_pid()
 {
-   log_entry "check_pid" "$@"
+   log_entry "monitor::process::check_pid" "$@"
 
    local pid_file="$1"
 
    local old_pid
 
-   old_pid="`get_pid "${pid_file}"`"
+   old_pid="`monitor::process::get_pid "${pid_file}"`"
    if [ -z "$old_pid" ]
    then
       return 1
    fi
-   does_pid_exist "${old_pid}"
+   monitor::process::does_pid_exist "${old_pid}"
 }
 

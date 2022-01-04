@@ -32,7 +32,7 @@
 MULLE_MONITOR_CALLBACK_SH="included"
 
 
-monitor_callback_usage()
+monitor::callback::usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -63,7 +63,7 @@ EOF
 }
 
 
-add_callback_usage()
+monitor::callback::add_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -80,7 +80,7 @@ EOF
 }
 
 
-create_callback_usage()
+monitor::callback::create_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -99,7 +99,7 @@ EOF
 }
 
 
-edit_callback_usage()
+monitor::callback::edit_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -117,7 +117,7 @@ EOF
 }
 
 
-remove_callback_usage()
+monitor::callback::remove_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -135,7 +135,7 @@ EOF
 }
 
 
-list_callback_usage()
+monitor::callback::list_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -158,7 +158,7 @@ EOF
 }
 
 
-run_callback_usage()
+monitor::callback::run_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -176,7 +176,7 @@ EOF
 }
 
 
-cat_callback_usage()
+monitor::callback::cat_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -195,9 +195,9 @@ EOF
 }
 
 
-_r_callback_executable_install_filename()
+monitor::callback::_r_callback_executable_install_filename()
 {
-   log_entry "_r_callback_executable_install_filename" "$@"
+   log_entry "monitor::callback::_r_callback_executable_install_filename" "$@"
 
    local callback="$1"
 
@@ -213,9 +213,9 @@ _r_callback_executable_install_filename()
 }
 
 
-_r_callback_executable_filename()
+monitor::callback::_r_callback_executable_filename()
 {
-   log_entry "_r_callback_executable_filename" "$@"
+   log_entry "monitor::callback::_r_callback_executable_filename" "$@"
 
    local callback="$1"
    local defaultcallback="$2"
@@ -245,13 +245,13 @@ _r_callback_executable_filename()
 }
 
 
-_r_locate_callback()
+monitor::callback::_r_locate()
 {
-   log_entry "_r_locate_callback" "$@"
+   log_entry "monitor::callback::_r_locate" "$@"
 
    local callback="$1"
 
-   if _r_callback_executable_filename "${callback}" \
+   if monitor::callback::_r_callback_executable_filename "${callback}" \
                                       "${MULLE_MONITOR_DEFAULT_CALLBACK}"
    then
       return 0
@@ -269,7 +269,7 @@ _r_locate_callback()
 }
 
 
-_cheap_help_options()
+monitor::callback::_cheap_help_options()
 {
    local usage="$1"
 
@@ -294,18 +294,18 @@ _cheap_help_options()
 }
 
 
-remove_callback_main()
+monitor::callback::remove()
 {
-   log_entry "remove_callback_main" "$@"
+   log_entry "monitor::callback::remove" "$@"
 
-   _cheap_help_options "remove_callback_usage"
+   monitor::callback::_cheap_help_options "monitor::callback::remove_usage"
 
-   [ "$#" -ne 1 ] && remove_callback_usage
+   [ "$#" -ne 1 ] && monitor::callback::remove_usage
 
    local callback="$1"
 
    local executable
-   _r_callback_executable_install_filename "${callback}"
+   monitor::callback::_r_callback_executable_install_filename "${callback}"
    executable="${RVAL}"
 
    if [ ! -e "${executable}" ]
@@ -318,25 +318,25 @@ remove_callback_main()
 }
 
 
-add_callback_main()
+monitor::callback::add()
 {
-   log_entry "add_callback_main" "$@"
+   log_entry "monitor::callback::add" "$@"
 
-   _cheap_help_options "add_callback_usage"
+   monitor::callback::_cheap_help_options "monitor::callback::add_usage"
 
-   [ "$#" -ne 2 ] && add_callback_usage
+   [ "$#" -ne 2 ] && monitor::callback::add_usage
 
    local callback="$1"
    local filename="$2"
 
    validate_monitor_identifier "${callback}"
 
-   [ -z "${filename}" ] && monitor_task_usage "missing filename"
+   [ -z "${filename}" ] && monitor::task::usage "missing filename"
    [ "${filename}" = "-" -o -f "${filename}" ] || fail "\"${filename}\" not found"
 
    local executable
 
-   _r_callback_executable_install_filename "${callback}"
+   monitor::callback::_r_callback_executable_install_filename "${callback}"
    executable="${RVAL}"
 
    [ -e "${executable}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = 'NO' ] \
@@ -362,9 +362,9 @@ add_callback_main()
 }
 
 
-emit_default_callback()
+monitor::callback::emit_default()
 {
-   log_entry "emit_default_callback" "$@"
+   log_entry "monitor::callback::emit_default" "$@"
 
    local callback="$1"
 
@@ -377,34 +377,34 @@ EOF
 }
 
 
-create_callback_main()
+monitor::callback::create()
 {
-   log_entry "create_callback_main" "$@"
+   log_entry "monitor::callback::create" "$@"
 
-   _cheap_help_options "create_callback_main"
+   monitor::callback::_cheap_help_options "monitor::callback::create"
 
-   [ "$#" -ne 1 ] && create_callback_usage
+   [ "$#" -ne 1 ] && monitor::callback::create_usage
 
    local callback="$1"
 
    validate_monitor_identifier "${callback}"
-   emit_default_callback "${callback}" | add_callback_main "${callback}" "-"
+   monitor::callback::emit_default "${callback}" | monitor::callback::add "${callback}" "-"
 }
 
 
-edit_callback_main()
+monitor::callback::edit()
 {
-   log_entry "edit_callback_main" "$@"
+   log_entry "monitor::callback::edit" "$@"
 
-   _cheap_help_options "edit_task_usage"
+   monitor::callback::_cheap_help_options "monitor::task::edit_usage"
 
-   [ "$#" -ne 1 ] && edit_task_usage
+   [ "$#" -ne 1 ] && monitor::task::edit_usage
 
    local callback="$1"
 
    local executable
 
-   _r_callback_executable_install_filename "${callback}"
+   monitor::callback::_r_callback_executable_install_filename "${callback}"
    executable="${RVAL}"
 
    if [ ! -e "${executable}" ]
@@ -419,18 +419,18 @@ edit_callback_main()
 
 # "hidden" function used for testing
 
-locate_callback_main()
+monitor::callback::locate()
 {
-   log_entry "locate_callback_main" "$@"
+   log_entry "monitor::callback::locate" "$@"
 
-   _cheap_help_options "run_callback_usage"
+   monitor::callback::_cheap_help_options "monitor::callback::run_usage"
 
-   [ "$#" -lt 1 ] && run_callback_usage
+   [ "$#" -lt 1 ] && monitor::callback::run_usage
 
    local callback="$1"; shift
 
 
-   if ! _r_locate_callback "${callback}"
+   if ! monitor::callback::_r_locate "${callback}"
    then
       return 1
    fi
@@ -439,21 +439,21 @@ locate_callback_main()
 }
 
 
-run_callback_main()
+monitor::callback::run()
 {
-   log_entry "run_callback_main" "$@"
+   log_entry "monitor::callback::run" "$@"
 
-   _cheap_help_options "run_callback_usage"
+   monitor::callback::_cheap_help_options "monitor::callback::run_usage"
 
-   [ "$#" -lt 1 ] && run_callback_usage
+   [ "$#" -lt 1 ] && monitor::callback::run_usage
 
    local callback="$1" # not shifted anymore
 
-   [ -z "${callback}" ] && run_callback_usage "empty callback"
+   [ -z "${callback}" ] && monitor::callback::run_usage "empty callback"
 
    local executable
 
-   if ! _r_locate_callback "${callback}"
+   if ! monitor::callback::_r_locate "${callback}"
    then
       return 1
    fi
@@ -482,7 +482,7 @@ run_callback_main()
 }
 
 
-list_callbacks()
+monitor::callback::_list()
 {
    local directory="$1"
    local mode="$2"
@@ -520,9 +520,9 @@ list_callbacks()
 }
 
 
-list_callback_main()
+monitor::callback::list()
 {
-   log_entry "list_callback_main" "$@"
+   log_entry "monitor::callback::list" "$@"
 
    local OPTION_MODE="output-name"
 
@@ -530,7 +530,7 @@ list_callback_main()
    do
       case "$1" in
          -h*|--help|help)
-            list_callback_usage
+            monitor::callback::list_usage
          ;;
 
          --output-path)
@@ -542,7 +542,7 @@ list_callback_main()
          ;;
 
          -*)
-            list_callback_usage "Unknown option \"$1\""
+            monitor::callback::list_usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -554,14 +554,14 @@ list_callback_main()
    done
 
 
-   [ "$#" -ne 0 ] && list_callback_usage
+   [ "$#" -ne 0 ] && monitor::callback::list_usage
 
    if [ -d "${MULLE_MONITOR_ETC_DIR}/bin" ]
    then
       log_info "User Callbacks"
       log_verbose "Custom callbacks override extension callbacks of same name"
       log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/bin"
-      list_callbacks "${MULLE_MONITOR_ETC_DIR}/bin" "${OPTION_MODE}"
+      monitor::callback::_list "${MULLE_MONITOR_ETC_DIR}/bin" "${OPTION_MODE}"
    fi
 
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/bin" ]
@@ -569,24 +569,24 @@ list_callback_main()
       log_info "Extension Callbacks"
       log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_SHARE_DIR#${MULLE_USER_PWD}/}/bin"
 
-      list_callbacks "${MULLE_MONITOR_SHARE_DIR}/bin" "${OPTION_MODE}"
+      monitor::callback::_list "${MULLE_MONITOR_SHARE_DIR}/bin" "${OPTION_MODE}"
    fi
 }
 
 
-cat_callback_main()
+monitor::callback::cat()
 {
-   log_entry "cat_callback_main" "$@"
+   log_entry "monitor::callback::cat" "$@"
 
-   _cheap_help_options "cat_callback_main"
+   monitor::callback::_cheap_help_options "monitor::callback::cat"
 
-   [ "$#" -lt 1 ] && cat_callback_usage
+   [ "$#" -lt 1 ] && monitor::callback::cat_usage
 
    local callback="$1"; shift
 
-   [ -z "${callback}" ] && cat_callback_usage "empty callback"
+   [ -z "${callback}" ] && monitor::callback::cat_usage "empty callback"
 
-   if ! _r_locate_callback "${callback}"
+   if ! monitor::callback::_r_locate "${callback}"
    then
       fail "Callback \"${callback}\" not found"
       return 1
@@ -599,9 +599,9 @@ cat_callback_main()
 ###
 ###  MAIN
 ###
-monitor_callback_main()
+monitor::callback::main()
 {
-   log_entry "monitor_callback_main" "$@"
+   log_entry "monitor::callback::main" "$@"
 
    if [ -z "${MULLE_PATH_SH}" ]
    then
@@ -617,18 +617,18 @@ monitor_callback_main()
    #
    # handle options
    #
-   _cheap_help_options "monitor_callback_usage"
+   monitor::callback::_cheap_help_options "monitor::callback::usage"
 
    local cmd="${1:-list}"
    [ $# -ne 0 ] && shift
 
    case "${cmd}" in
       add|cat|create|edit|list|locate|remove|run)
-         ${cmd}_callback_main "$@"
+         monitor::callback::${cmd} "$@"
       ;;
 
       *)
-         monitor_callback_usage "unknown command \"${cmd}\""
+         monitor::callback::usage "unknown command \"${cmd}\""
       ;;
    esac
 }

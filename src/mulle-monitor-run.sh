@@ -32,7 +32,7 @@
 MULLE_MONITOR_RUN_SH="included"
 
 
-monitor_run_usage()
+monitor::run::usage()
 {
    [ "$#" -ne 0 ] && log_error "$*"
 
@@ -70,7 +70,7 @@ EOF
 #
 # misc handling
 #
-is_binary_missing()
+monitor::run::is_binary_missing()
 {
    if which "$1" > /dev/null 2> /dev/null
    then
@@ -80,13 +80,13 @@ is_binary_missing()
 }
 
 
-check_fswatch()
+monitor::run::check_fswatch()
 {
-   log_entry "check_fswatch" "$@"
+   log_entry "monitor::run::check_fswatch" "$@"
 
    FSWATCH="${FSWATCH:-fswatch}"
 
-   if ! is_binary_missing "${FSWATCH}"
+   if ! monitor::run::is_binary_missing "${FSWATCH}"
    then
       return
    fi
@@ -115,14 +115,14 @@ ${C_INFO}You then need to exit ${MULLE_USAGE_NAME} and reenter it."
 }
 
 
-check_inotifywait()
+monitor::run::check_inotifywait()
 {
-   log_entry "check_inotifywait" "$@"
+   log_entry "monitor::run::check_inotifywait" "$@"
 
    # for testing
    INOTIFYWAIT="${INOTIFYWAIT:-inotifywait}"
 
-   if ! is_binary_missing "${INOTIFYWAIT}"
+   if ! monitor::run::is_binary_missing "${INOTIFYWAIT}"
    then
       return
    fi
@@ -148,9 +148,9 @@ ${C_INFO}You then need to exit ${MULLE_USAGE_NAME} and reenter it."
 #
 # return _action in global variable
 #
-_action_of_event_command()
+monitor::run::_action_of_event_command()
 {
-   log_entry "_action_of_event_command" "$@"
+   log_entry "monitor::run::_action_of_event_command" "$@"
 
    local cmd="$1"
 
@@ -185,9 +185,9 @@ _action_of_event_command()
 # _action
 # _category
 # _
-_process_event()
+monitor::run::_process_event()
 {
-   log_entry "_process_event" "${1:0:30}..." "${2:0:30}..." "$3" "$4"
+   log_entry "monitor::run::_process_event" "${1:0:30}..." "${2:0:30}..." "$3" "$4"
 
    local ignore="$1"
    local match="$2"
@@ -195,7 +195,7 @@ _process_event()
    local cmd="$4"
 
      # cheap
-   if ! _action_of_event_command "${cmd}"
+   if ! monitor::run::_action_of_event_command "${cmd}"
    then
       return 1
    fi
@@ -220,7 +220,7 @@ _process_event()
          fi
 
          # returns 0,1,2
-         r_match_filepath "${ignore}" "${match}" "${filepath}"
+         match::filename::r_match_filepath "${ignore}" "${match}" "${filepath}"
          case $?  in
             1)
                return 1
@@ -256,9 +256,9 @@ _process_event()
 }
 
 
-run_tasks_synchronously()
+monitor::run::run_tasks_synchronously()
 {
-   log_entry 'run_tasks_synchronously' "$@"
+   log_entry 'monitor::run::run_tasks_synchronously' "$@"
 
    local tasks="$1"
 
@@ -273,7 +273,7 @@ run_tasks_synchronously()
       shell_enable_glob
       log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
 
-      eval run_task_main "${task}"
+      eval monitor::task::run "${task}"
       rval=$?
 
       if [ "${rval}" -ne 0 ]
@@ -287,17 +287,17 @@ run_tasks_synchronously()
 }
 
 
-__async_task_run()
+monitor::run::__async_task_run()
 {
-   log_entry "__async_task_run" "$@"
+   log_entry "monitor::run::__async_task_run" "$@"
 
-   run_tasks_synchronously "$@"
+   monitor::run::run_tasks_synchronously "$@"
 }
 
 
-callback_and_task()
+monitor::run::callback_and_task()
 {
-   log_entry "callback_and_task" "$@"
+   log_entry "monitor::run::callback_and_task" "$@"
 
    local callback="$1"
    local action="$2"
@@ -307,10 +307,10 @@ callback_and_task()
    local tasks
    local rval
 
-   tasks="`run_callback_main "${callback}" \
-                             "${action}" \
-                             "${filepath}" \
-                             "${category}"`"
+   tasks="`monitor::callback::run "${callback}" \
+                                  "${action}" \
+                                  "${filepath}" \
+                                  "${category}"`"
    rval=$?
 
    if [ $rval -ne 0 -o -z "${tasks}" ]
@@ -330,17 +330,17 @@ callback_and_task()
       r_add_line "${MULLE_MONITOR_PRELUDE_TASK}" "${tasks}"
       r_add_line "${RVAL}" "${MULLE_MONITOR_CODA_TASK}"
       tasks="${RVAL}"
-      run_tasks_synchronously "${tasks}"
+      monitor::run::run_tasks_synchronously "${tasks}"
       return $?
    fi
 
-   eval add_task_job "__async" "${tasks}"
+   eval monitor::task::add_job "__async" "${tasks}"
 }
 
 
-_watch_using_fswatch()
+monitor::run::_watch_using_fswatch()
 {
-   log_entry "_watch_using_fswatch" "$@"
+   log_entry "monitor::run::_watch_using_fswatch" "$@"
 
    local ignore="$1" ; shift
    local match="$1" ; shift
@@ -366,13 +366,13 @@ _watch_using_fswatch()
 
       cmd="`printf "%s\n" "${line}" | LC_ALL=C sed 's/^\(.*\) \(.*\)$/\2/' | tr '[a-z]' '[A-Z]'`"
 
-      if _process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
+      if monitor::run::_process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
          if [ "${OPTION_PAUSE}" = 'YES' ]
          then
             return 0
          else
-            callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
+            monitor::run::callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
          fi
       fi
    done < <( eval_exekutor "'${FSWATCH}'" -r -x --event-flag-separator : "$@" )  # bashism
@@ -381,9 +381,9 @@ _watch_using_fswatch()
 }
 
 
-watch_using_fswatch()
+monitor::run::watch_using_fswatch()
 {
-   log_entry "watch_using_fswatch" "$@"
+   log_entry "monitor::run::watch_using_fswatch" "$@"
 
    local task
    local _action
@@ -391,21 +391,21 @@ watch_using_fswatch()
    local _callback
    local _filepath
 
-   while _watch_using_fswatch "$@"
+   while monitor::run::_watch_using_fswatch "$@"
    do
-      callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
+      monitor::run::callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
    done
 }
 
 
-_watch_using_inotifywait()
+monitor::run::_watch_using_inotifywait()
 {
-   log_entry "_watch_using_inotifywait" "$@"
+   log_entry "monitor::run::_watch_using_inotifywait" "$@"
 
    local ignore="$1"; shift
    local match="$1"; shift
 
-   # see watch_using_fswatch comment
+   # see monitor::run::watch_using_fswatch comment
    local directory
    local filename
    local cmd
@@ -456,13 +456,13 @@ _watch_using_inotifywait()
 
       _filepath="` filepath_concat "${directory}" "${filename}" `"
 
-      if _process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
+      if monitor::run::_process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
          if [ "${OPTION_PAUSE}" = 'YES' ]
          then
             return 0
          else
-            callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
+            monitor::run::callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
          fi
       fi
    done < <( eval_exekutor "'${INOTIFYWAIT}'" -q -r -m -c "$@" )  # bashism
@@ -471,9 +471,9 @@ _watch_using_inotifywait()
 }
 
 
-watch_using_inotifywait()
+monitor::run::watch_using_inotifywait()
 {
-   log_entry "watch_using_inotifywait" "$@"
+   log_entry "monitor::run::watch_using_inotifywait" "$@"
 
    local task
    local _action
@@ -481,17 +481,17 @@ watch_using_inotifywait()
    local _callback
    local _filepath
 
-   while _watch_using_inotifywait "$@"
+   while monitor::run::_watch_using_inotifywait "$@"
    do
       # only if OPTION_PAUSE=YES
-      callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
+      monitor::run::callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
    done
 }
 
 
-cleanup_monitor()
+monitor::run::cleanup_monitor()
 {
-   log_entry "cleanup_monitor" "$@"
+   log_entry "monitor::run::cleanup_monitor" "$@"
 
    local killnowait="$1"
 
@@ -516,20 +516,20 @@ cleanup_monitor()
 }
 
 
-kill_monitor()
+monitor::run::kill_monitor()
 {
-   log_entry "kill_monitor" "$@"
+   log_entry "monitor::run::kill_monitor" "$@"
 
-   cleanup_monitor 'YES'
+   monitor::run::cleanup_monitor 'YES'
    exit 1
 }
 
 
-prevent_superflous_monitor()
+monitor::run::prevent_superflous_monitor()
 {
-   log_entry "prevent_superflous_monitor" "$@"
+   log_entry "monitor::run::prevent_superflous_monitor" "$@"
 
-   if check_pid "${MONITOR_PIDFILE}"
+   if monitor::process::check_pid "${MONITOR_PIDFILE}"
    then
       fail "Another monitor seems to be already running here
 ${C_INFO}If this is not the case:
@@ -544,15 +544,15 @@ ${C_RESET_BOLD}   rm \"${MONITOR_PIDFILE#${MULLE_USER_PWD}/}\""
       rm "${TEST_JOB_PIDFILE}" 2> /dev/null
    fi
 
-   trap kill_monitor 2 3
-   announce_pid $$ "${MONITOR_PIDFILE}"
+   trap monitor::run::kill_monitor 2 3
+   monitor::process::announce_pid $$ "${MONITOR_PIDFILE}"
 }
 
 
 # merely exists for -ld tracing
-change_working_directory()
+monitor::run::change_working_directory()
 {
-   log_entry "change_working_directory" "$@"
+   log_entry "monitor::run::change_working_directory" "$@"
 
    exekutor cd "$1" || fail "could not cd to \"$1\""
 }
@@ -561,9 +561,9 @@ change_working_directory()
 ###
 ###  MAIN
 ###
-monitor_run_main()
+monitor::run::main()
 {
-   log_entry "monitor_run_main" "$@"
+   log_entry "monitor::run::main" "$@"
 
    local OPTION_MATCH_TYPE_FILTER
    local OPTION_MATCH_CATEGORY_FILTER
@@ -582,7 +582,7 @@ monitor_run_main()
    do
       case "$1" in
          -h*|--help|help)
-            monitor_run_usage
+            monitor::run::usage
          ;;
 
          -a|--all)
@@ -590,7 +590,7 @@ monitor_run_main()
          ;;
 
          -d)
-            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor::run::usage "missing argument to $1"
             shift
 
             OPTION_DIR="$1"
@@ -601,7 +601,7 @@ monitor_run_main()
          ;;
 
          -mf|--match-filter|--tf|--type-filter)
-            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor::run::usage "missing argument to $1"
             shift
 
             OPTION_MATCH_TYPE_FILTER="$1"
@@ -609,7 +609,7 @@ monitor_run_main()
 
 
          -cf|--category-filter)
-            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor::run::usage "missing argument to $1"
             shift
 
             OPTION_MATCH_IGNORE_FILTER="$1"
@@ -620,14 +620,14 @@ monitor_run_main()
          ;;
 
          --prelude-task)
-            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor::run::usage "missing argument to $1"
             shift
 
             MULLE_MONITOR_PRELUDE_TASK="$1"
          ;;
 
          --coda-task)
-            [ $# -eq 1 ] && monitor_run_usage "missing argument to $1"
+            [ $# -eq 1 ] && monitor::run::usage "missing argument to $1"
             shift
 
             MULLE_MONITOR_CODA_TASK="$1"
@@ -650,7 +650,7 @@ monitor_run_main()
          ;;
 
          -*)
-            monitor_run_usage "Unknown option \"$1\""
+            monitor::run::usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -696,7 +696,7 @@ monitor_run_main()
    mkdir_if_missing "${MULLE_MONITOR_VAR_DIR}"
    MONITOR_PIDFILE="${MULLE_MONITOR_VAR_DIR}/run/monitor-pid"
 
-   change_working_directory "${OPTION_DIR}"
+   monitor::run::change_working_directory "${OPTION_DIR}"
 
    export MULLE_MONITOR_LIBEXEC_DIR
    export MULLE_BASHFUNCTIONS_LIBEXEC_DIR
@@ -707,15 +707,15 @@ monitor_run_main()
 
    case "${MULLE_UNAME}" in
       linux)
-         check_inotifywait
+         monitor::run::check_inotifywait
       ;;
 
       *)
-         check_fswatch
+         monitor::run::check_fswatch
       ;;
    esac
 
-   prevent_superflous_monitor
+   monitor::run::prevent_superflous_monitor
 
    if [ "${OPTION_SYNCHRONOUS}" = 'NO' ]
    then
@@ -739,7 +739,7 @@ monitor_run_main()
 
       . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-environment.sh" || exit 1
 
-      match_environment "${MULLE_MONITOR_PROJECT_DIR}"
+      match::environment::init "${MULLE_MONITOR_PROJECT_DIR}"
 
       . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-filename.sh" || exit 1
    fi
@@ -748,11 +748,11 @@ monitor_run_main()
    local ignore
    local match
 
-   _define_patternfilefunctions "${MULLE_MATCH_SKIP_DIR}"  \
+   match::filename::_define_patternfilefunctions "${MULLE_MATCH_SKIP_DIR}"  \
                                 "${MULLE_MONITOR_VAR_DIR}/cache/ignore"
    ignore="${_cache}"
 
-   _define_patternfilefunctions "${MULLE_MATCH_USE_DIR}" \
+   match::filename::_define_patternfilefunctions "${MULLE_MATCH_USE_DIR}" \
                                 "${MULLE_MONITOR_VAR_DIR}/cache/match"
    match="${_cache}"
 
@@ -778,13 +778,13 @@ monitor_run_main()
 
    case "${MULLE_UNAME}" in
       linux)
-         watch_using_inotifywait "${ignore}" "${match}" "${quoted_toplevel}"
+         monitor::run::watch_using_inotifywait "${ignore}" "${match}" "${quoted_toplevel}"
       ;;
 
       *)
-         watch_using_fswatch "${ignore}" "${match}" "${quoted_toplevel}"
+         monitor::run::watch_using_fswatch "${ignore}" "${match}" "${quoted_toplevel}"
       ;;
    esac
 
-   cleanup_monitor
+   monitor::run::cleanup_monitor
 }

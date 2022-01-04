@@ -32,7 +32,7 @@
 MULLE_MONITOR_TASK_SH="included"
 
 
-task_print_commands()
+monitor::task::print_commands()
 {
    local show_all="${1:-NO}"
 
@@ -60,7 +60,7 @@ task_print_commands()
 }
 
 
-monitor_task_usage()
+monitor::task::usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -78,7 +78,7 @@ Usage:
 Commands:
 EOF
 
-   task_print_commands "${MULLE_FLAG_LOG_VERBOSE}" | LC_ALL=C sort >&2
+   monitor::task::print_commands "${MULLE_FLAG_LOG_VERBOSE}" | LC_ALL=C sort >&2
 
    if [ "${MULLE_FLAG_LOG_VERBOSE}" != 'YES' ]
    then
@@ -91,7 +91,7 @@ EOF
 }
 
 
-add_task_usage()
+monitor::task::add_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -125,7 +125,7 @@ EOF
 }
 
 
-create_task_usage()
+monitor::task::create_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -146,7 +146,7 @@ EOF
 }
 
 
-remove_task_usage()
+monitor::task::remove_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -162,7 +162,8 @@ EOF
    exit 1
 }
 
-list_task_usage()
+
+monitor::task::list_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -185,7 +186,7 @@ EOF
 }
 
 
-edit_task_usage()
+monitor::task::edit_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -204,7 +205,7 @@ EOF
 }
 
 
-kill_task_usage()
+monitor::task::kill_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -221,7 +222,7 @@ EOF
 }
 
 
-status_task_usage()
+monitor::task::status_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -244,7 +245,7 @@ EOF
 }
 
 
-run_task_usage()
+monitor::task::run_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -262,7 +263,7 @@ EOF
 }
 
 
-cat_task_usage()
+monitor::task::cat_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -280,7 +281,7 @@ EOF
 }
 
 
-test_task_usage()
+monitor::task::test_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -292,13 +293,13 @@ Usage:
    ${MULLE_USAGE_NAME} task test <task>
 
    Load a task and check that the task provides an entry function called
-   <task>_task_run.
+   <task>sde::reflect::task_run.
 EOF
    exit 1
 }
 
 
-ps_task_usage()
+monitor::task::ps_usage()
 {
    if [ "$#" -ne 0 ]
    then
@@ -319,7 +320,7 @@ EOF
 #
 #
 #
-_cheap_help_options()
+monitor::task::_cheap_help_options()
 {
    local usage="$1"
 
@@ -344,9 +345,9 @@ _cheap_help_options()
 }
 
 
-r_task_donefile()
+monitor::task::r_donefile()
 {
-   log_entry "r_task_donefile" "$@"
+   log_entry "monitor::task::r_donefile" "$@"
 
    local task="$1"
 
@@ -355,9 +356,9 @@ r_task_donefile()
 }
 
 
-r_task_pidfile()
+monitor::task::r_pidfile()
 {
-   log_entry "r_task_pidfile" "$@"
+   log_entry "monitor::task::r_pidfile" "$@"
 
    local task="$1"
 
@@ -366,17 +367,17 @@ r_task_pidfile()
 }
 
 
-echo_task_run()
+monitor::task::echo_run()
 {
-   log_entry "echo_task_run" "$@"
+   log_entry "monitor::task::echo_run" "$@"
 
    rexekutor echo "The echo task does nothing. ($*)"
 }
 
 
-r_task_get_entry_functionname()
+monitor::task::r_get_entry_functionname()
 {
-   log_entry "r_task_get_entry_functionname" "$@"
+   log_entry "monitor::task::r_get_entry_functionname" "$@"
 
    local task="$1"
 
@@ -389,9 +390,9 @@ r_task_get_entry_functionname()
 }
 
 
-r_task_plugin_install_filename()
+monitor::task::r_plugin_install_filename()
 {
-   log_entry "r_task_plugin_install_filename" "$@"
+   log_entry "monitor::task::r_plugin_install_filename" "$@"
 
    local task="$1"
 
@@ -407,9 +408,9 @@ r_task_plugin_install_filename()
 }
 
 
-r_task_plugin_filename()
+monitor::task::r_plugin_filename()
 {
-   log_entry "r_task_plugin_filename" "$@"
+   log_entry "monitor::task::r_plugin_filename" "$@"
 
    local task="$1"
 
@@ -432,13 +433,13 @@ r_task_plugin_filename()
 }
 
 
-r_locate_task()
+monitor::task::r_locate()
 {
-   log_entry "r_locate_task" "$@"
+   log_entry "monitor::task::r_locate" "$@"
 
    local task="$1"
 
-   if ! r_task_plugin_filename "${task}"
+   if ! monitor::task::r_plugin_filename "${task}"
    then
       log_error "There is no installed task \"${task}\" (${RVAL})."
       return 1
@@ -448,15 +449,15 @@ r_locate_task()
 }
 
 
-_load_task()
+monitor::task::_load()
 {
-   log_entry "_load_task" "$@"
+   log_entry "monitor::task::_load" "$@"
 
    local task="$1"
 
 
    local filename
-   if ! r_locate_task "${task}"
+   if ! monitor::task::r_locate "${task}"
    then
       exit 1
    fi
@@ -473,16 +474,16 @@ _load_task()
 }
 
 
-__require_filename()
+monitor::task::__require_filename()
 {
-   log_entry "__require_filename" "$@"
+   log_entry "monitor::task::__require_filename" "$@"
 
    local task="$1"
    local filename="$2"
 
    local functionname
 
-   r_task_get_entry_functionname "${task}"
+   monitor::task::r_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
    unshell_disable_glob "${functionname}"
@@ -496,20 +497,20 @@ __require_filename()
 }
 
 
-r_require_task()
+monitor::task::r_require()
 {
-   log_entry "r_require_task" "$@"
+   log_entry "monitor::task::r_require" "$@"
 
    local task="$1"
 
    local functionname
 
-   r_task_get_entry_functionname "${task}"
+   monitor::task::r_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
    if ! shell_is_function "${functionname}"
    then
-      _load_task "${task}"
+      monitor::task::_load "${task}"
    fi
 
    # assume function is defined, get error later when we call
@@ -518,20 +519,30 @@ r_require_task()
 }
 
 
-remove_task_job()
+
+
+monitor::task::remove_job()
 {
-   log_entry "remove_task_job" "$@"
+   log_entry "monitor::task::remove_job" "$@"
 
    local task="$1"
 
-   r_task_pidfile "${task}"
-   kill_pid "${RVAL}"
+   monitor::task::r_pidfile "${task}"
+   monitor::process::kill_pid "${RVAL}"
 }
 
 
-remember_task_rval()
+# in here for backwards compatibility with non-upgraded projects
+remove_task_job()
 {
-   log_entry "remember_task_rval" "$@"
+   monitor::task::remove_job "$@"
+}
+
+
+
+monitor::task::remember_rval()
+{
+   log_entry "monitor::task::remember_rval" "$@"
 
    local task="$1"
    local rval="$2"
@@ -550,7 +561,7 @@ remember_task_rval()
       ;;
    esac
 
-   r_task_donefile "${task}"
+   monitor::task::r_donefile "${task}"
    taskdonefile="${RVAL}"
 
    r_mkdir_parent_if_missing "${taskdonefile}"
@@ -558,9 +569,9 @@ remember_task_rval()
 }
 
 
-add_task_job_sync()
+monitor::task::add_job_sync()
 {
-   log_entry "add_task_job_sync" "$@"
+   log_entry "monitor::task::add_job_sync" "$@"
 
    local task="$1" 
    local sleepexe="$2"
@@ -572,7 +583,7 @@ add_task_job_sync()
 
    local taskpidfile
 
-   r_task_pidfile "${task}"
+   monitor::task::r_pidfile "${task}"
    taskpidfile="${RVAL}"
 
    #
@@ -581,7 +592,7 @@ add_task_job_sync()
    # We can be harmlessly killed now
    #
    trap 'log_fluff "Task \"${task}\" with pid ${BASHPID} killed" ; exit 1' TERM
-   announce_current_pid "${taskpidfile}"
+   monitor::process::announce_current_pid "${taskpidfile}"
 
    local timestamp
 
@@ -625,15 +636,15 @@ add_task_job_sync()
       eval_exekutor "$@"
    rval=$?
 
-   remember_task_rval "${task}" "${rval}"
+   monitor::task::remember_rval "${task}" "${rval}"
 
    log_fluff "==> Ended task ($rval)"
 
-   done_pid "${taskpidfile}"
+   monitor::process::done_pid "${taskpidfile}"
 }
 
 
-wait_for_previous_task()
+monitor::task::wait_for_previous_job()
 {
    local taskpidfile="$1"
 
@@ -648,7 +659,7 @@ wait_for_previous_task()
    #
    # We could be unlucky here with another process grabbing the same pid ?
    #
-   while check_pid "${taskpidfile}"
+   while monitor::process::check_pid "${taskpidfile}"
    do
       log_fluff "Waiting for previous uninterruptible task to complete"
       sleep 1
@@ -657,20 +668,20 @@ wait_for_previous_task()
 
 
 # asynchronously
-add_task_job()
+monitor::task::add_job()
 {
-   log_entry "add_task_job" "$@"
+   log_entry "monitor::task::add_job" "$@"
 
    local task="$1"
 
    # rest commandline
 
-   r_require_task "${task}" || exit 1
+   monitor::task::r_require "${task}" || exit 1
    functionname="${RVAL}"
 
    local taskpidfile
 
-   r_task_pidfile "${task}"
+   monitor::task::r_pidfile "${task}"
    taskpidfile="${RVAL}"
 
    #
@@ -682,13 +693,13 @@ add_task_job()
    #
    if [ "${MULLE_MONITOR_PREEMPT}" = 'NO' ]
    then
-      wait_for_previous_task "${taskpidfile}"
+      monitor::task::wait_for_previous_job "${taskpidfile}"
    else
-      kill_pid "${taskpidfile}"
+      monitor::process::kill_pid "${taskpidfile}"
    fi
 
    (
-      add_task_job_sync "${task}" \
+      monitor::task::add_job_sync "${task}" \
                         "${MULLE_MONITOR_SLEEP_EXE:-sleep}" \
                         "${MULLE_MONITOR_SLEEP_TIME:-1}" \
                         "'${functionname}'" \
@@ -698,14 +709,14 @@ add_task_job()
 
 
 # synchronously
-run_task_job()
+monitor::task::run_job()
 {
-   log_entry "run_task_job" "$@"
+   log_entry "monitor::task::run_job" "$@"
 
    local task="$1"; shift
 
    local functionname
-   r_require_task "${task}" || exit 1
+   monitor::task::r_require "${task}" || exit 1
    functionname="${RVAL}"
 
    #
@@ -715,15 +726,15 @@ run_task_job()
 
    if [ "${MULLE_MONITOR_PREEMPT}" = 'NO' ]
    then
-      wait_for_previous_task "${taskpidfile}"
+      monitor::task::wait_for_previous_job "${taskpidfile}"
    else
-      kill_pid "${taskpidfile}"
+      monitor::process::kill_pid "${taskpidfile}"
    fi
 
    # Delay task schedule by 1 second, so that we can "coalesce"
    # incoming events
    #
-   add_task_job_sync "${task}" \
+   monitor::task::add_job_sync "${task}" \
                      "${MULLE_MONITOR_SLEEP_EXE:-sleep}" \
                      "${MULLE_MONITOR_SLEEP_TIME:-1}" \
                      "'${functionname}'" \
@@ -735,65 +746,72 @@ run_task_job()
 # just runs the task, doesn't care if other monitor is running or not
 # just clobbers
 #
-run_task_main()
+monitor::task::run()
 {
-   log_entry "run_task_main" "$@"
+   log_entry "monitor::task::run" "$@"
 
    local task="$1"
 
-   [ -z "${task}" ] && cat_task_usage "Empty task"
+   [ -z "${task}" ] && monitor::task::cat_usage "Empty task"
 
    shift
 
    local functionname
 
-   r_require_task "${task}" || exit 1
+   monitor::task::r_require "${task}" || exit 1
    functionname="${RVAL}"
 
    local taskpidfile
 
-   r_task_pidfile "${task}"
+   monitor::task::r_pidfile "${task}"
    taskpidfile="${RVAL}"
 
-   kill_pid "${taskpidfile}"
+   monitor::process::kill_pid "${taskpidfile}"
 
    local rval
 
    log_verbose "Execute task \"${functionname#${MULLE_USER_PWD}/}\""
 
-   announce_current_pid "${taskpidfile}"
+   monitor::process::announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
       exekutor "${functionname}" ${MULLE_MONITOR_TASK_FLAGS} "$@"
    rval=$?
 
-   remember_task_rval "${task}" "${rval}"
-   done_pid "${taskpidfile}"
+   monitor::task::remember_rval "${task}" "${rval}"
+   monitor::process::done_pid "${taskpidfile}"
 
    return $rval
 }
 
-
-cat_task_main()
+# in here for backwards compatibility with non-upgraded projects
+run_task_main()
 {
-   log_entry "cat_task_main" "$@"
+   monitor::task::run "$@"
+}
+
+
+
+monitor::task::cat()
+{
+   log_entry "monitor::task::cat" "$@"
 
    local task="$1"
 
-   [ -z "${task}" ] && cat_task_usage "Empty task"
+   [ -z "${task}" ] && monitor::task::cat_usage "Empty task"
 
-   r_locate_task "${task}" || exit 1
+   monitor::task::r_locate "${task}" || exit 1
 
    exekutor cat "${RVAL}"
 }
 
 
-emit_default_task()
+monitor::task::emit_default()
 {
-   log_entry "emit_default_task" "$@"
+   log_entry "monitor::task::emit_default" "$@"
 
    local task="$1"; shift
 
-   r_task_get_entry_functionname "${task}"
+   monitor::task::r_get_entry_functionname "${task}"
 
    cat <<EOF
 #! /usr/bin/env bash
@@ -815,7 +833,7 @@ if [ -z "\${MULLE_MONITOR_TASK_LOAD}" ]
 then
    if [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ]
    then
-      MULLE_BASHFUNCTIONS_LIBEXEC_DIR="\`mulle-bashfunctions-env libexec-dir 2> /dev/null\`"
+      MULLE_BASHFUNCTIONS_LIBEXEC_DIR="\`mulle-bashfunctions libexec-dir 2> /dev/null\`"
       [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ] && \\
          echo "mulle-bashfunctions are not installed" >&2 && \\
          exit 1
@@ -830,24 +848,24 @@ EOF
 }
 
 
-add_task_main()
+monitor::task::add()
 {
-   log_entry "add_task_main" "$@"
+   log_entry "monitor::task::add" "$@"
 
-   _cheap_help_options "add_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::add_usage"
 
-   [ "$#" -ne 2 ] && add_task_usage
+   [ "$#" -ne 2 ] && monitor::task::add_usage
 
    local task="$1"
    local filename="$2"
 
    validate_monitor_identifier "${task}"
 
-   [ -z "${filename}" ] && add_task_usage "missing filename"
+   [ -z "${filename}" ] && monitor::task::add_usage "missing filename"
 
    local plugin
 
-   r_task_plugin_install_filename "${task}"
+   monitor::task::r_plugin_install_filename "${task}"
    plugin="${RVAL}"
 
    [ -e "${plugin}" -a "${MULLE_FLAG_MAGNUM_FORCE}" = 'NO' ] \
@@ -868,7 +886,7 @@ add_task_main()
       redirect_exekutor "${plugin}" printf "%s\n" "${text}"
    else
       (
-         __require_filename "${task}" "${filename}"
+         monitor::task::__require_filename "${task}" "${filename}"
       ) || exit 1
 
       mkdir_if_missing "${plugindir}"
@@ -878,35 +896,35 @@ add_task_main()
 }
 
 
-create_task_main()
+monitor::task::create()
 {
-   log_entry "create_task_main" "$@"
+   log_entry "monitor::task::create" "$@"
 
-   _cheap_help_options "create_task_main"
+   monitor::task::_cheap_help_options "monitor::task::create"
 
-   [ "$#" -lt 1 ] && create_task_usage
+   [ "$#" -lt 1 ] && monitor::task::create_usage
 
    local task="$1"; shift
 
    validate_monitor_identifier "${task}"
 
-   emit_default_task "${task}" "$@" | add_task_main "${task}" "-"
+   monitor::task::emit_default "${task}" "$@" | monitor::task::add "${task}" "-"
 }
 
 
 
-edit_task_main()
+monitor::task::edit()
 {
-   log_entry "edit_task_main" "$@"
+   log_entry "monitor::task::edit" "$@"
 
-   _cheap_help_options "edit_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::edit_usage"
 
-   [ "$#" -ne 1 ] && edit_task_usage
+   [ "$#" -ne 1 ] && monitor::task::edit_usage
 
    local task="$1"
 
    local _plugin
-   r_task_plugin_install_filename "${task}"
+   monitor::task::r_plugin_install_filename "${task}"
    _plugin="${RVAL}"
 
    if [ ! -e "${_plugin}" ]
@@ -919,18 +937,18 @@ edit_task_main()
 }
 
 
-remove_task_main()
+monitor::task::remove()
 {
-   log_entry "remove_task_main" "$@"
+   log_entry "monitor::task::remove" "$@"
 
-   _cheap_help_options "remove_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::remove_usage"
 
-   [ "$#" -ne 1 ] && remove_task_usage
+   [ "$#" -ne 1 ] && monitor::task::remove_usage
 
    local task="$1"
 
    local _plugin
-   r_task_plugin_install_filename "${task}"
+   monitor::task::r_plugin_install_filename "${task}"
    _plugin="${RVAL}"
 
    if [ ! -e "${_plugin}" ]
@@ -943,7 +961,7 @@ remove_task_main()
 }
 
 
-list_tasks()
+monitor::task::_list()
 {
    local directory="$1"
    local mode="$2"
@@ -982,9 +1000,9 @@ list_tasks()
 }
 
 
-list_task_main()
+monitor::task::list()
 {
-   log_entry "list_task_main" "$@"
+   log_entry "monitor::task::list" "$@"
 
    local OPTION_MODE="output-name"
 
@@ -992,7 +1010,7 @@ list_task_main()
    do
       case "$1" in
          -h*|--help|help)
-            list_task_usage
+            monitor::task::list_usage
          ;;
 
          --output-path)
@@ -1004,7 +1022,7 @@ list_task_main()
          ;;
 
          -*)
-            list_task_usage "Unknown option \"$1\""
+            monitor::task::list_usage "Unknown option \"$1\""
          ;;
 
          *)
@@ -1016,7 +1034,7 @@ list_task_main()
    done
 
 
-   [ "$#" -ne 0 ] && list_task_usage
+   [ "$#" -ne 0 ] && monitor::task::list_usage
 
    if [ -d "${MULLE_MONITOR_ETC_DIR}/libexec" ]
    then
@@ -1024,7 +1042,7 @@ list_task_main()
       log_verbose "User tasks override extension tasks of same name"
       log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/libexec"
 
-      list_tasks "${MULLE_MONITOR_ETC_DIR}/libexec" "${OPTION_MODE}"
+      monitor::task::_list "${MULLE_MONITOR_ETC_DIR}/libexec" "${OPTION_MODE}"
    fi
 
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/libexec" ]
@@ -1032,22 +1050,22 @@ list_task_main()
       log_info "Extension Tasks"
       log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/libexec"
 
-      list_tasks "${MULLE_MONITOR_SHARE_DIR}/libexec" "${OPTION_MODE}"
+      monitor::task::_list "${MULLE_MONITOR_SHARE_DIR}/libexec" "${OPTION_MODE}"
    fi
 }
 
 
-test_task_main()
+monitor::task::test()
 {
-   log_entry "test_task_main" "$@"
+   log_entry "monitor::task::test" "$@"
 
-   _cheap_help_options "test_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::test_usage"
 
    local task="$1"
 
-   [ "$#" -lt 1 ] && test_task_usage
+   [ "$#" -lt 1 ] && monitor::task::test_usage
 
-   r_require_task "$@"
+   monitor::task::r_require "$@"
 
    if ! shell_is_function "${RVAL}"
    then
@@ -1057,20 +1075,20 @@ test_task_main()
 }
 
 
-status_task_main()
+monitor::task::status()
 {
-   log_entry "status_task_main" "$@"
+   log_entry "monitor::task::status" "$@"
 
-   _cheap_help_options "status_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::status_usage"
 
-   [ "$#" -lt 1 ] && status_task_usage
+   [ "$#" -lt 1 ] && monitor::task::status_usage
 
    local task="$1"
 
    local taskpidfile
    local taskdonefile
 
-   r_task_pidfile "${task}"
+   monitor::task::r_pidfile "${task}"
    taskpidfile="${RVAL}"
 
    if [ -f "${taskpidfile}" ]
@@ -1079,7 +1097,7 @@ status_task_main()
       return
    fi
 
-   r_task_donefile "${task}"
+   monitor::task::r_donefile "${task}"
    taskdonefile="${RVAL}"
    if [ -f "${taskdonefile}" ]
    then
@@ -1091,19 +1109,19 @@ status_task_main()
 }
 
 
-kill_task_main()
+monitor::task::kill()
 {
-   log_entry "status_task_main" "$@"
+   log_entry "monitor::task::kill" "$@"
 
-   _cheap_help_options "kill_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::kill_usage"
 
-   [ "$#" -lt 1 ] && kill_task_usage
+   [ "$#" -lt 1 ] && monitor::task::kill_usage
 
    local task="$1"
 
    local taskdonefile
 
-   r_task_pidfile "${task}"
+   monitor::task::r_pidfile "${task}"
    taskpidfile="${RVAL}"
 
    if [ ! -f "${taskpidfile}" ]
@@ -1126,11 +1144,11 @@ Started by a different monitor ?"
 }
 
 
-ps_task_main()
+monitor::task::ps()
 {
-   log_entry "ps_task_main" "$@"
+   log_entry "monitor::task::ps" "$@"
 
-   [ "$#" -ne 0 ] && list_task_usage
+   [ "$#" -ne 0 ] && monitor::task::list_usage
 
    log_info "Running Tasks"
    if [ -d "${MULLE_MONITOR_VAR_DIR}/run/monitor" ]
@@ -1154,17 +1172,17 @@ ps_task_main()
 
 
 # "Hidden" command for testing
-locate_task_main()
+monitor::task::locate()
 {
-   log_entry "locate_task_main" "$@"
+   log_entry "monitor::task::locate" "$@"
 
-   _cheap_help_options "run_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::run_usage"
 
-   [ "$#" -lt 1 ] && run_task_usage
+   [ "$#" -lt 1 ] && monitor::task::run_usage
 
    local task="$1"; shift
 
-   r_locate_task "${task}" || exit 1
+   monitor::task::r_locate "${task}" || exit 1
 
    # keep absolute for tests and ease of use
    rexekutor printf "%s\n" "${RVAL}"
@@ -1175,9 +1193,9 @@ locate_task_main()
 ###
 ###  MAIN
 ###
-monitor_task_main()
+monitor::task::main()
 {
-   log_entry "monitor_task_main" "$@"
+   log_entry "monitor::task::main" "$@"
 
    if [ -z "${MULLE_MONITOR_PROCESS_SH}" ]
    then
@@ -1185,7 +1203,7 @@ monitor_task_main()
       . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-process.sh" || exit 1
    fi
 
-   _cheap_help_options "monitor_task_usage"
+   monitor::task::_cheap_help_options "monitor::task::usage"
 
 
    local cmd="${1}"
@@ -1193,15 +1211,15 @@ monitor_task_main()
 
    case "${cmd}" in
       add|cat|create|edit|kill|list|locate|ps|run|status|test|remove)
-         ${cmd}_task_main "$@"
+         monitor::task::${cmd} "$@"
       ;;
 
       "")
-         monitor_task_usage
+         monitor::task::usage
       ;;
 
       *)
-         monitor_task_usage "unknown command \"${cmd}\""
+         monitor::task::usage "unknown command \"${cmd}\""
       ;;
    esac
 }

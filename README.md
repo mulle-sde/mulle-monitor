@@ -65,7 +65,7 @@ mulle-monitor callback list
 ### mulle-monitor task
 
 A *task* is a bash script plugin. It needs to define a function
-`<task>_task_run` to be a usable task plugin. Tasks are loaded into the
+`<task>sde::reflect::task_run` to be a usable task plugin. Tasks are loaded into the
 mulle-monitor and they must be able to coexist with other tasks.
 
 Tasks can be long running. It is ensure that only one task runs at a given
