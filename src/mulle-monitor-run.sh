@@ -250,7 +250,7 @@ monitor::run::_process_event()
    _callback="${_callback#*-}"
    _category="${_patternfile##*--}"
 
-   [ -z "${_callback}" ] && internal_fail "_callback is empty"
+   [ -z "${_callback}" ] && _internal_fail "_callback is empty"
 
    return 0
 }
@@ -362,7 +362,7 @@ monitor::run::_watch_using_fswatch()
       _filepath="`LC_ALL=C sed -e 's/^\(.*\) \(.*\)$/\1/' \
                                -e "s/^${escaped_workingdir}//" <<< "${line}" `"
 
-      [ -z "${_filepath}" ] && internal_fail "failed to parse \"${line}\""
+      [ -z "${_filepath}" ] && _internal_fail "failed to parse \"${line}\""
 
       cmd="`printf "%s\n" "${line}" | LC_ALL=C sed 's/^\(.*\) \(.*\)$/\2/' | tr '[a-z]' '[A-Z]'`"
 

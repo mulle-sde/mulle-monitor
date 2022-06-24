@@ -381,7 +381,7 @@ monitor::task::r_get_entry_functionname()
 
    local task="$1"
 
-   [ -z "${task}" ] && internal_fail "empty task"
+   [ -z "${task}" ] && _internal_fail "empty task"
 
    r_identifier "${task}"
    RVAL="${RVAL}_task_run"
@@ -402,7 +402,7 @@ monitor::task::r_plugin_install_filename()
       fail "\"${task}\" must be a-zA-Z0-9-"
    fi
 
-   [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && internal_fail "MULLE_MONITOR_SHARE_DIR not set"
+   [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && _internal_fail "MULLE_MONITOR_SHARE_DIR not set"
 
    RVAL="${MULLE_MONITOR_SHARE_DIR}/libexec/${task}-task.sh"
 }
@@ -414,7 +414,7 @@ monitor::task::r_plugin_filename()
 
    local task="$1"
 
-   [ -z "${MULLE_MONITOR_ETC_DIR}" ] && internal_fail "MULLE_MONITOR_ETC_DIR not set"
+   [ -z "${MULLE_MONITOR_ETC_DIR}" ] && _internal_fail "MULLE_MONITOR_ETC_DIR not set"
 
    if [ "${task}" = 'echo' ]
    then
@@ -557,7 +557,7 @@ monitor::task::remember_rval()
       ;;
 
       "")
-         internal_fail "rval is empty"
+         _internal_fail "rval is empty"
       ;;
    esac
 
@@ -992,7 +992,7 @@ monitor::task::_list()
             ;;
 
             *)
-               internal_fail "unknown mode \"${mode}\""
+               _internal_fail "unknown mode \"${mode}\""
             ;;
          esac
       done
@@ -1126,7 +1126,7 @@ monitor::task::kill()
 
    if [ ! -f "${taskpidfile}" ]
    then
-      log_warning "Task \"${task}\" not known to be running. \
+      _log_warning "Task \"${task}\" not known to be running. \
 Started by a different monitor ?"
       return 1
    fi

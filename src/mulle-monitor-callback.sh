@@ -232,7 +232,7 @@ monitor::callback::_r_callback_executable_filename()
 
       r_absolutepath "${defaultcallback}"
    else
-      [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && internal_fail "MULLE_MONITOR_SHARE_DIR not set"
+      [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && _internal_fail "MULLE_MONITOR_SHARE_DIR not set"
 
       RVAL="${MULLE_MONITOR_ETC_DIR}/bin/${callback}-callback"
       if [ ! -x "${RVAL}" ]
@@ -512,7 +512,7 @@ monitor::callback::_list()
             ;;
 
             *)
-               internal_fail "unknown mode \"${mode}\""
+               _internal_fail "unknown mode \"${mode}\""
             ;;
          esac
       done

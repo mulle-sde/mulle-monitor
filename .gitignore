@@ -9,3 +9,5 @@ publisher-info.sh
 *.graffle
 test/10-run-inotifywait/src/foo.sh
 tests/10-run-inotifywait/src/foo.sh
+.gitignore
+.mulle-make-build-dir
