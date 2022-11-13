@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+# shellcheck shell=bash
 #
 #   Copyright (c) 2018 Nat! - Mulle kybernetiK
 #   All rights reserved.
@@ -625,7 +625,7 @@ monitor::task::add_job_sync()
    # depending on the setup, we may now want to hide the current pid
    # so it doesn't get killed (need a locking scheme ?)
    #
-   log_verbose "Execute task \"${1#${MULLE_USER_PWD}/}\""
+   log_verbose "Execute task \"${1#"${MULLE_USER_PWD}/"}\""
 
 
    log_fluff "==> Starting${modifier}task"
@@ -770,7 +770,7 @@ monitor::task::run()
 
    local rval
 
-   log_verbose "Execute task \"${functionname#${MULLE_USER_PWD}/}\""
+   log_verbose "Execute task \"${functionname#"${MULLE_USER_PWD}/"}\""
 
    monitor::process::announce_current_pid "${taskpidfile}"
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
@@ -814,7 +814,7 @@ monitor::task::emit_default()
    monitor::task::r_get_entry_functionname "${task}"
 
    cat <<EOF
-#! /usr/bin/env bash
+# shellcheck shell=bash
 
 #
 # This function will be called by mulle-monitor
@@ -982,7 +982,7 @@ monitor::task::_list()
             ;;
 
             'output-path')
-               printf "   %s/%s\n" "${directory#${MULLE_USER_PWD}/}" "${filename}"
+               printf "   %s/%s\n" "${directory#"${MULLE_USER_PWD}/"}" "${filename}"
             ;;
 
             'output-cat')
@@ -1040,7 +1040,7 @@ monitor::task::list()
    then
       log_info "User Tasks"
       log_verbose "User tasks override extension tasks of same name"
-      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/libexec"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#"${MULLE_USER_PWD}/"}/libexec"
 
       monitor::task::_list "${MULLE_MONITOR_ETC_DIR}/libexec" "${OPTION_MODE}"
    fi
@@ -1048,7 +1048,7 @@ monitor::task::list()
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/libexec" ]
    then
       log_info "Extension Tasks"
-      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/libexec"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#"${MULLE_USER_PWD}/"}/libexec"
 
       monitor::task::_list "${MULLE_MONITOR_SHARE_DIR}/libexec" "${OPTION_MODE}"
    fi

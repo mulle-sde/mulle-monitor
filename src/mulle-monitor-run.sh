@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+# shellcheck shell=bash
 #
 #   Copyright (c) 2016 Nat! - Mulle kybernetiK
 #   All rights reserved.
@@ -348,6 +348,7 @@ monitor::run::_watch_using_fswatch()
    local cmd
    local workingdir
    local escaped_workingdir
+
    workingdir="`pwd -P`"
 
    r_escaped_sed_pattern "${workingdir}/"
@@ -359,12 +360,13 @@ monitor::run::_watch_using_fswatch()
       # extract filepath from line and
       # make it a relative filepath
       #
-      _filepath="`LC_ALL=C sed -e 's/^\(.*\) \(.*\)$/\1/' \
-                               -e "s/^${escaped_workingdir}//" <<< "${line}" `"
+      _filepath="${line%\ *}"
+      _filepath="${_filepath#"${workingdir}/"}"
 
       [ -z "${_filepath}" ] && _internal_fail "failed to parse \"${line}\""
 
-      cmd="`printf "%s\n" "${line}" | LC_ALL=C sed 's/^\(.*\) \(.*\)$/\2/' | tr '[a-z]' '[A-Z]'`"
+      r_uppercase "${line##\* }"
+      cmd="${RVAL}"
 
       if monitor::run::_process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
@@ -454,7 +456,8 @@ monitor::run::_watch_using_inotifywait()
          ;;
       esac
 
-      _filepath="` filepath_concat "${directory}" "${filename}" `"
+      r_filepath_concat "${directory}" "${filename}"
+      _filepath="${RVAL}"
 
       if monitor::run::_process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
@@ -533,7 +536,7 @@ monitor::run::prevent_superflous_monitor()
    then
       fail "Another monitor seems to be already running here
 ${C_INFO}If this is not the case:
-${C_RESET_BOLD}   rm \"${MONITOR_PIDFILE#${MULLE_USER_PWD}/}\""
+${C_RESET_BOLD}   rm \"${MONITOR_PIDFILE#"${MULLE_USER_PWD}/"}\""
    fi
 
    #
@@ -729,7 +732,7 @@ monitor::run::main()
    fi
 
    log_verbose "==> Start monitoring"
-   log_fluff "Edits in your directory \"${OPTION_DIR#${MULLE_USER_PWD}/}\" are now monitored."
+   log_fluff "Edits in your directory \"${OPTION_DIR#"${MULLE_USER_PWD}/"}\" are now monitored."
 
    log_info "Monitor is running. [CTRL]-[C] to quit"
 

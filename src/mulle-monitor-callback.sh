@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+# shellcheck shell=bash
 #
 #   Copyright (c) 2018 Nat! - Mulle kybernetiK
 #   All rights reserved.
@@ -369,7 +369,7 @@ monitor::callback::emit_default()
    local callback="$1"
 
    cat <<EOF
-#! /usr/bin/env bash
+# shellcheck shell=bash
 
 printf "%s\n" "${callback}"
 
@@ -459,7 +459,7 @@ monitor::callback::run()
    fi
    executable="${RVAL}"
 
-   log_verbose "Execute callback \"${executable#${MULLE_USER_PWD}/}\""
+   log_verbose "Execute callback \"${executable#"${MULLE_USER_PWD}/"}\""
 
    case "${executable}" in
       echo\ *)
@@ -502,7 +502,7 @@ monitor::callback::_list()
             ;;
 
             'output-path')
-               printf "   %s/%s\n" "${directory#${MULLE_USER_PWD}/}" "${filename}"
+               printf "   %s/%s\n" "${directory#"${MULLE_USER_PWD}/"}" "${filename}"
             ;;
 
             'output-cat')
@@ -560,14 +560,14 @@ monitor::callback::list()
    then
       log_info "User Callbacks"
       log_verbose "Custom callbacks override extension callbacks of same name"
-      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#${MULLE_USER_PWD}/}/bin"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#"${MULLE_USER_PWD}/"}/bin"
       monitor::callback::_list "${MULLE_MONITOR_ETC_DIR}/bin" "${OPTION_MODE}"
    fi
 
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/bin" ]
    then
       log_info "Extension Callbacks"
-      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_SHARE_DIR#${MULLE_USER_PWD}/}/bin"
+      log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_SHARE_DIR#"${MULLE_USER_PWD}/"}/bin"
 
       monitor::callback::_list "${MULLE_MONITOR_SHARE_DIR}/bin" "${OPTION_MODE}"
    fi
