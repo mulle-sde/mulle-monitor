@@ -105,7 +105,7 @@ monitor::print_flags()
 }
 
 
-monitor::_usage()
+monitor::do_usage()
 {
    local verbose="${1:-NO}"
    local error="${2}"
@@ -157,7 +157,7 @@ EOF
 
 monitor::usage()
 {
-   monitor::_usage "$@" >&2
+   monitor::do_usage "$@" >&2
    exit 1
 }
 
