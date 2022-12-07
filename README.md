@@ -13,7 +13,16 @@ in the working directory (and its sub-directories) using
 [fswatch](https://github.com/emcrisostomo/fswatch) or
 [inotifywait](https://linux.die.net/man/1/inotifywait). It then
 matches those filenames against a set of *patternfiles* to determine the
-appropriate executable to call.
+appropriate executable to call. The *type* of the patternfile is used as
+a *callback*, which is then used to run a *task*.
+
+
+#### Example
+
+A patternfile defines with its filename (say `20-source1--all`) its *type*
+(which  is "source1" in this case). The *callback*, a small script named
+"source1-callback" runs `echo "filesystem"`. So mulle-monitor will run the
+*filesystem* task.
 
 
 ![](dox/mulle-monitor-overview.png)
@@ -115,8 +124,8 @@ If an incoming event can not be categorized as one of these three event types:
 
 The filename that generated the event is then classified using *patternfile*
 matching (see [`mulle-monitor patternfile`](#mulle-monitor-patternfile) for
-more information).
-The result of this classification is the name of the *callback*.
+more information). By this classification the *type* and *category* of the
+file are determined.
 
 The *callback* will now be executed. As arguments it gets the event type
 (e.g. **update**), the filename, and the *category* of the matching

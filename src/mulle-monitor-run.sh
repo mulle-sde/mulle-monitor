@@ -148,9 +148,9 @@ ${C_INFO}You then need to exit ${MULLE_USAGE_NAME} and reenter it."
 #
 # return _action in global variable
 #
-monitor::run::_action_of_event_command()
+monitor::run::__action_of_event_command()
 {
-   log_entry "monitor::run::_action_of_event_command" "$@"
+   log_entry "monitor::run::__action_of_event_command" "$@"
 
    local cmd="$1"
 
@@ -181,13 +181,13 @@ monitor::run::_action_of_event_command()
 #
 # process event, return in global variables for speeds sake
 #
-# _callback
-# _action
-# _category
-# _
-monitor::run::_process_event()
+# local _action
+# local _callback
+# local _category
+#
+monitor::run::__process_event()
 {
-   log_entry "monitor::run::_process_event" "${1:0:30}..." "${2:0:30}..." "$3" "$4"
+   log_entry "monitor::run::__process_event" "${1:0:30}..." "${2:0:30}..." "$3" "$4"
 
    local ignore="$1"
    local match="$2"
@@ -195,7 +195,7 @@ monitor::run::_process_event()
    local cmd="$4"
 
      # cheap
-   if ! monitor::run::_action_of_event_command "${cmd}"
+   if ! monitor::run::__action_of_event_command "${cmd}"
    then
       return 1
    fi
@@ -206,7 +206,8 @@ monitor::run::_process_event()
       ;;
    esac
 
-   local _patternfile
+   local patternfile
+
    #
    # not as cheap. If mulle-match is our script stuff, it's too expensive
    # to fork this everytime. We use it as a library.
@@ -214,29 +215,30 @@ monitor::run::_process_event()
    case "${MULLE_MATCH}" in
       ""|*/mulle-match)
 
-         if ! [ -z "${MULLE_MATCH_FILENAME_SH}" ]
-         then
-            . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-filename.sh" || exit 1
-         fi
+         include "match::filename"
 
-         # returns 0,1,2
+         # returns 0,1,4
+         # 0: match
+         # 1: no match
+         # 4: match was empty
+
          match::filename::r_match_filepath "${ignore}" "${match}" "${filepath}"
-         case $?  in
+         case $? in
             1)
                return 1
             ;;
 
-            2)
-               _callback="default"
+            4)
+               _callback="filesystem"
                _category="all"
                return 0
             ;;
          esac
-         _patternfile="${RVAL}"
+         patternfile="${RVAL}"
       ;;
 
       *)
-         if ! _patternfile="`"${MULLE_MATCH:-mulle-match}" \
+         if ! patternfile="`"${MULLE_MATCH:-mulle-match}" \
                 --type-filter "${OPTION_MATCH_TYPE_FILTER}" \
                 --category-filter "${OPTION_MATCH_CATEGORY_FILTER}" \
                 "${filepath}" `"
@@ -246,14 +248,15 @@ monitor::run::_process_event()
       ;;
    esac
 
-   _callback="${_patternfile%%--*}"
+   _callback="${patternfile%%--*}"
    _callback="${_callback#*-}"
-   _category="${_patternfile##*--}"
+   _category="${patternfile##*--}"
 
    [ -z "${_callback}" ] && _internal_fail "_callback is empty"
 
    return 0
 }
+
 
 
 monitor::run::run_tasks_synchronously()
@@ -267,31 +270,36 @@ monitor::run::run_tasks_synchronously()
 
    rval=0
 
-   shell_disable_glob
-   for task in ${tasks}
-   do
-      shell_enable_glob
+   .for task in ${tasks}
+   .do
       log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
 
-      eval monitor::task::run "${task}"
+      monitor::task::run "'${task}'"
       rval=$?
 
       if [ "${rval}" -ne 0 ]
       then
-         break
+         .break
       fi
-   done
-   shell_enable_glob
+   .done
 
    return $rval
 }
 
-
-monitor::run::__async_task_run()
+monitor::run::run_tasks_async()
 {
-   log_entry "monitor::run::__async_task_run" "$@"
+   log_entry 'monitor::run::run_tasks_async' "$@"
 
-   monitor::run::run_tasks_synchronously "$@"
+   local tasks="$1"
+
+   local task
+
+   .for task in ${tasks}
+   .do
+      log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
+
+      monitor::task::run_job "${task}" &
+   .done
 }
 
 
@@ -334,18 +342,21 @@ monitor::run::callback_and_task()
       return $?
    fi
 
-   eval monitor::task::add_job "__async" "${tasks}"
+   monitor::run::run_tasks_async "${tasks}"
 }
 
 
-monitor::run::_watch_using_fswatch()
+monitor::run::__watch_using_fswatch()
 {
-   log_entry "monitor::run::_watch_using_fswatch" "$@"
+   log_entry "monitor::run::__watch_using_fswatch" "$@"
 
-   local ignore="$1" ; shift
-   local match="$1" ; shift
+   local ignore="$1"
+   local match="$2"
+
+   shift 2
 
    local cmd
+   local line
    local workingdir
    local escaped_workingdir
 
@@ -368,7 +379,7 @@ monitor::run::_watch_using_fswatch()
       r_uppercase "${line##\* }"
       cmd="${RVAL}"
 
-      if monitor::run::_process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
+      if monitor::run::__process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
          if [ "${OPTION_PAUSE}" = 'YES' ]
          then
@@ -387,68 +398,73 @@ monitor::run::watch_using_fswatch()
 {
    log_entry "monitor::run::watch_using_fswatch" "$@"
 
-   local task
    local _action
    local _category
    local _callback
    local _filepath
 
-   while monitor::run::_watch_using_fswatch "$@"
+   while monitor::run::__watch_using_fswatch "$@"
    do
       monitor::run::callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
    done
 }
 
 
-monitor::run::_watch_using_inotifywait()
+# local _action
+# local _callback
+# local _category
+# local _filepath
+monitor::run::__watch_using_inotifywait()
 {
-   log_entry "monitor::run::_watch_using_inotifywait" "$@"
+   log_entry "monitor::run::__watch_using_inotifywait" "$@"
 
-   local ignore="$1"; shift
-   local match="$1"; shift
+   local ignore="$1"
+   local match="$2"
+
+   shift 2
 
    # see monitor::run::watch_using_fswatch comment
    local directory
    local filename
+   local filepath
    local cmd
-   local _line
-   local _field
+   local line
 
    #
    # https://unix.stackexchange.com/questions/166546/bash-cannot-break-out-of-piped-while-read-loop-process-substitution-works
    #
-   while IFS=$'\n' read -r _line # directory cmd filename
+   while IFS=$'\n' read -r line # directory cmd filename
    do
-      log_debug "${_line}"
+      log_debug "${line}"
 
-      case "${_line}" in
+      case "${line}" in
          \"*)
-            directory="${_line%%\",*}"  # not perfect but ..
+            directory="${line%%\",*}"  # not perfect but ..
             directory="${directory:1}"
-            _line="${_line#*\",}"
+            line="${line#*\",}"
          ;;
 
          *)
-            directory="${_line%%,*}"
-            _line="${_line#*,}"
+            directory="${line%%,*}"
+            line="${line#*,}"
          ;;
       esac
 
-      case "${_line}" in
+      case "${line}" in
          \"*)
-            cmd="${_line%%\",*}"
+            cmd="${line%%\",*}"
             cmd="${cmd:1}"
-            _line="${_line#*\",}"
+            line="${line#*\",}"
          ;;
 
          *)
-            cmd="${_line%%,*}"
-            _line="${_line#*,}"
+            cmd="${line%%,*}"
+            line="${line#*,}"
          ;;
       esac
 
       # remove quotes
-      filename="${_line}"
+      filename="${line}"
       case "${filename}" in
          \"*\")
             filename="${filename:1}"
@@ -459,7 +475,7 @@ monitor::run::_watch_using_inotifywait()
       r_filepath_concat "${directory}" "${filename}"
       _filepath="${RVAL}"
 
-      if monitor::run::_process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
+      if monitor::run::__process_event "${ignore}" "${match}" "${_filepath}" "${cmd}"
       then
          if [ "${OPTION_PAUSE}" = 'YES' ]
          then
@@ -478,13 +494,12 @@ monitor::run::watch_using_inotifywait()
 {
    log_entry "monitor::run::watch_using_inotifywait" "$@"
 
-   local task
    local _action
    local _category
    local _callback
    local _filepath
 
-   while monitor::run::_watch_using_inotifywait "$@"
+   while monitor::run::__watch_using_inotifywait "$@"
    do
       # only if OPTION_PAUSE=YES
       monitor::run::callback_and_task "${_callback}" "${_action}" "${_filepath}" "${_category}"
@@ -572,7 +587,7 @@ monitor::run::main()
    local OPTION_MATCH_CATEGORY_FILTER
    local OPTION_MONITOR_WITH_IGNORE_D='NO'
    local OPTION_PAUSE='NO'
-   local OPTION_SYNCHRONOUS='YES'
+   local OPTION_SYNCHRONOUS='NO'
 
    local OPTION_DIR
 
@@ -664,37 +679,13 @@ monitor::run::main()
       shift
    done
 
-   if [ -z "${MULLE_PATH_SH}" ]
-   then
-      # shellcheck source=../../mulle-bashfunctions/src/mulle-path.sh
-      . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-path.sh" || exit 1
-   fi
-   if [ -z "${MULLE_FILE_SH}" ]
-   then
-      # shellcheck source=../../mulle-bashfunctions/src/mulle-file.sh
-      . "${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-file.sh" || exit 1
-   fi
+   include "path"
+   include "file"
+   include "monitor::process"
+   include "monitor::callback"
+   include "monitor::task"
 
-   if [ -z "${MULLE_MONITOR_PROCESS_SH}" ]
-   then
-      # shellcheck source=src/mulle-monitor-process.sh
-      . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-process.sh" || exit 1
-   fi
-   if [ -z "${MULLE_MONITOR_CALLBACK_SH}" ]
-   then
-      # shellcheck source=src/mulle-monitor-callback.sh
-      . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-callback.sh" || exit 1
-   fi
-   if [ -z "${MULLE_MONITOR_TASK_SH}" ]
-   then
-      # shellcheck source=src/mulle-monitor-task.sh
-      . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-task.sh" || exit 1
-   fi
-
-   if [ -z "${MULLE_HOSTNAME}" ]
-   then
-      MULLE_HOSTNAME="`hostname -s`"
-   fi
+   MULLE_HOSTNAME="${MULLE_HOSTNAME:-`hostname -s`}"
 
    mkdir_if_missing "${MULLE_MONITOR_VAR_DIR}"
    MONITOR_PIDFILE="${MULLE_MONITOR_VAR_DIR}/run/monitor-pid"
@@ -722,13 +713,13 @@ monitor::run::main()
 
    if [ "${OPTION_SYNCHRONOUS}" = 'NO' ]
    then
-      [ -z "${MULLE_MONITOR_PRELUDE_TASK}" ] && fail "--prelude-task requires --serial"
-      [ -z "${MULLE_MONITOR_PRELUDE_TASK}" ] && fail "--coda-task requires --serial"
+      [ -z "${MULLE_MONITOR_PRELUDE_TASK}" ] || fail "--prelude-task requires --serial"
+      [ -z "${MULLE_MONITOR_CODA_TASK}" ]    || fail "--coda-task requires --serial"
    fi
 
    if [ ! -d "${MULLE_MONITOR_ETC_DIR}" -a ! -d "${MULLE_MONITOR_SHARE_DIR}" ]
    then
-      MULLE_MONITOR_DEFAULT_CALLBACK="echo echo"
+      MULLE_MONITOR_DEFAULT_CALLBACK="echo filesystem"
    fi
 
    log_verbose "==> Start monitoring"
@@ -738,54 +729,44 @@ monitor::run::main()
 
    if [ -z "${MULLE_MATCH_FILENAME_SH}" ]
    then
-      MULLE_MATCH_LIBEXEC_DIR="`"${MULLE_MATCH:-mulle-match}" libexec-dir`" || exit 1
-
-      . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-environment.sh" || exit 1
+      include "match::environment"
 
       match::environment::init "${MULLE_MONITOR_PROJECT_DIR}"
 
-      . "${MULLE_MATCH_LIBEXEC_DIR}/mulle-match-filename.sh" || exit 1
+      include "match::filename"
    fi
 
-   local _cache
    local ignore
+
+   match::filename::r_define_patternfilefunctions "${MULLE_MATCH_SKIP_DIR}"  \
+                                                  "${MULLE_MONITOR_VAR_DIR}/cache/ignore"
+   ignore="${RVAL}"
+
    local match
 
-   match::filename::_define_patternfilefunctions "${MULLE_MATCH_SKIP_DIR}"  \
-                                "${MULLE_MONITOR_VAR_DIR}/cache/ignore"
-   ignore="${_cache}"
+   match::filename::r_define_patternfilefunctions "${MULLE_MATCH_USE_DIR}" \
+                                                  "${MULLE_MONITOR_VAR_DIR}/cache/match"
+   match="${RVAL}"
 
-   match::filename::_define_patternfilefunctions "${MULLE_MATCH_USE_DIR}" \
-                                "${MULLE_MONITOR_VAR_DIR}/cache/match"
-   match="${_cache}"
+   local pathitem
+   local directories
 
-   #
-   # Only monitor **existing** top level folders. WHY ?
-   # Because when you have the build folder in the project directory
-   # the amount of file change events is not really nice
-   #
-   local quoted_toplevel
+   .foreachpath pathitem in ${MULLE_MATCH_PATH:-.}
+   .do
+      r_escaped_singlequotes "${pathitem}"
+      r_concat "${directories}" "'${RVAL}'"
+      directories="${RVAL}"
+   .done
 
-   if [ "${OPTION_MONITOR_WITH_IGNORE_D}" = 'YES' ]
-   then
-      quoted_toplevel="`_find_toplevel_files "${ignore}"`"
-      if [ -z "${quoted_toplevel}" ]
-      then
-         fail "\"ignore.d\" leaves nothing to be monitored"
-      fi
-   else
-      quoted_toplevel="'.'"
-   fi
-
-   log_verbose "Monitoring: ${quoted_toplevel}"
+   log_verbose "Monitoring: ${directories}"
 
    case "${MULLE_UNAME}" in
       linux)
-         monitor::run::watch_using_inotifywait "${ignore}" "${match}" "${quoted_toplevel}"
+         eval monitor::run::watch_using_inotifywait "'${ignore}'" "'${match}'" "${directories}"
       ;;
 
       *)
-         monitor::run::watch_using_fswatch "${ignore}" "${match}" "${quoted_toplevel}"
+         eval monitor::run::watch_using_fswatch "'${ignore}'" "'${match}'" "${directories}"
       ;;
    esac
 

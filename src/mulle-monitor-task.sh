@@ -103,7 +103,7 @@ Usage:
    ${MULLE_USAGE_NAME} task add <task> <script>
 
    Install a sourceable bash script as a mulle-sde task. You may specify '-'
-   as to read it from stdin. See task create for a more quick way to create
+   as to read it from stdin. See task create for a quicker way to create
    simple tasks.
 
    Your script should query the environment variable MULLE_FLAG_DRY_RUN and
@@ -134,13 +134,19 @@ monitor::task::create_usage()
 
    cat <<EOF >&2
 Usage:
-   ${MULLE_USAGE_NAME} task create <task> ...
+   ${MULLE_USAGE_NAME} task create [options] <task> ...
 
    Create a task from commandline arguments. This is the simplest albeit
    somewhat limited from of creating a task. You can then edit the task with
    \`${MULLE_USAGE_NAME} task edit\`.
 
+Examples:
    ${MULLE_USAGE_NAME} task create echo "Hello World"
+   ${MULLE_USAGE_NAME} task create ~/bin/my-script "whatever"
+
+Options:
+   --callback : also create a callback with the same name
+
 EOF
    exit 1
 }
@@ -293,7 +299,7 @@ Usage:
    ${MULLE_USAGE_NAME} task test <task>
 
    Load a task and check that the task provides an entry function called
-   <task>sde::reflect::task_run.
+   <task>_task_run.
 EOF
    exit 1
 }
@@ -316,13 +322,12 @@ EOF
 }
 
 
-
 #
 #
 #
-monitor::task::_cheap_help_options()
+monitor::task::cheap_help_options()
 {
-   local usage="$1"
+   local usage="$1" ; shift
 
    while :
    do
@@ -351,7 +356,7 @@ monitor::task::r_donefile()
 
    local task="$1"
 
-   r_identifier "${task}"
+   r_extended_identifier "${task}"
    RVAL="${MULLE_MONITOR_VAR_DIR}/run/monitor/${RVAL}-task"
 }
 
@@ -362,7 +367,7 @@ monitor::task::r_pidfile()
 
    local task="$1"
 
-   r_identifier "${task}"
+   r_extended_identifier "${task}"
    RVAL="${MULLE_MONITOR_VAR_DIR}/run/monitor/${RVAL}-task.pid"
 }
 
@@ -383,7 +388,7 @@ monitor::task::r_get_entry_functionname()
 
    [ -z "${task}" ] && _internal_fail "empty task"
 
-   r_identifier "${task}"
+   r_extended_identifier "${task}"
    RVAL="${RVAL}_task_run"
 
    log_debug "task functionname: \"${RVAL}\""
@@ -396,15 +401,9 @@ monitor::task::r_plugin_install_filename()
 
    local task="$1"
 
-   r_identifier "${task//_/+}"  # make underscores fail too
-   if [ "${RVAL}" != "${task}" ]
-   then
-      fail "\"${task}\" must be a-zA-Z0-9-"
-   fi
+   [ -z "${MULLE_MONITOR_ETC_DIR}" ] && _internal_fail "MULLE_MONITOR_ETC_DIR not set"
 
-   [ -z "${MULLE_MONITOR_SHARE_DIR}" ] && _internal_fail "MULLE_MONITOR_SHARE_DIR not set"
-
-   RVAL="${MULLE_MONITOR_SHARE_DIR}/libexec/${task}-task.sh"
+   RVAL="${MULLE_MONITOR_ETC_DIR}/libexec/${task}-task.sh"
 }
 
 
@@ -449,9 +448,9 @@ monitor::task::r_locate()
 }
 
 
-monitor::task::_load()
+monitor::task::load()
 {
-   log_entry "monitor::task::_load" "$@"
+   log_entry "monitor::task::load" "$@"
 
    local task="$1"
 
@@ -474,9 +473,9 @@ monitor::task::_load()
 }
 
 
-monitor::task::__require_filename()
+monitor::task::require_filename()
 {
-   log_entry "monitor::task::__require_filename" "$@"
+   log_entry "monitor::task::require_filename" "$@"
 
    local task="$1"
    local filename="$2"
@@ -486,7 +485,7 @@ monitor::task::__require_filename()
    monitor::task::r_get_entry_functionname "${task}"
    functionname="${RVAL}"
 
-   unshell_disable_glob "${functionname}"
+   unset -f "${functionname}"
 
    . "${filename}" 2> /dev/null || fail "\"${filename}\" is not a valid bash script"
 
@@ -510,15 +509,13 @@ monitor::task::r_require()
 
    if ! shell_is_function "${functionname}"
    then
-      monitor::task::_load "${task}"
+      monitor::task::load "${task}"
    fi
 
    # assume function is defined, get error later when we call
    RVAL="${functionname}"
    return 0
 }
-
-
 
 
 monitor::task::remove_job()
@@ -698,12 +695,14 @@ monitor::task::add_job()
       monitor::process::kill_pid "${taskpidfile}"
    fi
 
+   include "parallel"
+
    (
       monitor::task::add_job_sync "${task}" \
-                        "${MULLE_MONITOR_SLEEP_EXE:-sleep}" \
-                        "${MULLE_MONITOR_SLEEP_TIME:-1}" \
-                        "'${functionname}'" \
-                        "$@"
+                                  "${MULLE_MONITOR_SLEEP_EXE:-very_short_sleep}" \
+                                  "${MULLE_MONITOR_SLEEP_TIME:-010}" \
+                                  "'${functionname}'" \
+                                  "$@"
    ) &
 }
 
@@ -716,6 +715,7 @@ monitor::task::run_job()
    local task="$1"; shift
 
    local functionname
+
    monitor::task::r_require "${task}" || exit 1
    functionname="${RVAL}"
 
@@ -724,6 +724,11 @@ monitor::task::run_job()
    # prempt it.
    #
 
+   local taskpidfile
+
+   monitor::task::r_pidfile "${task}"
+   taskpidfile="${RVAL}"
+
    if [ "${MULLE_MONITOR_PREEMPT}" = 'NO' ]
    then
       monitor::task::wait_for_previous_job "${taskpidfile}"
@@ -731,14 +736,16 @@ monitor::task::run_job()
       monitor::process::kill_pid "${taskpidfile}"
    fi
 
-   # Delay task schedule by 1 second, so that we can "coalesce"
+   include "parallel"
+
+   # Delay task schedule by 0.01 second, so that we can "coalesce"
    # incoming events
    #
    monitor::task::add_job_sync "${task}" \
-                     "${MULLE_MONITOR_SLEEP_EXE:-sleep}" \
-                     "${MULLE_MONITOR_SLEEP_TIME:-1}" \
-                     "'${functionname}'" \
-                     "$@"
+                               "${MULLE_MONITOR_SLEEP_EXE:-very_short_sleep}" \
+                               "${MULLE_MONITOR_SLEEP_TIME:-010}" \
+                               "'${functionname}'" \
+                               "$@"
 }
 
 
@@ -783,12 +790,12 @@ monitor::task::run()
    return $rval
 }
 
+
 # in here for backwards compatibility with non-upgraded projects
 run_task_main()
 {
    monitor::task::run "$@"
 }
-
 
 
 monitor::task::cat()
@@ -814,6 +821,7 @@ monitor::task::emit_default()
    monitor::task::r_get_entry_functionname "${task}"
 
    cat <<EOF
+#! /usr/bin/env mulle-bash
 # shellcheck shell=bash
 
 #
@@ -831,16 +839,6 @@ ${RVAL}()
 #
 if [ -z "\${MULLE_MONITOR_TASK_LOAD}" ]
 then
-   if [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ]
-   then
-      MULLE_BASHFUNCTIONS_LIBEXEC_DIR="\`mulle-bashfunctions libexec-dir 2> /dev/null\`"
-      [ -z "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" ] && \\
-         echo "mulle-bashfunctions are not installed" >&2 && \\
-         exit 1
-
-      . "\${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}/mulle-bashfunctions.sh" || exit 1
-   fi
-
    ${RVAL} "\$@"
 fi
 
@@ -848,18 +846,23 @@ EOF
 }
 
 
+#
+# TODO: this is old code, that doesn't really understand the etc / share
+#       mechanism
+#
 monitor::task::add()
 {
    log_entry "monitor::task::add" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::add_usage"
+   monitor::task::cheap_help_options "monitor::task::add_usage" "$@"
 
    [ "$#" -ne 2 ] && monitor::task::add_usage
 
    local task="$1"
    local filename="$2"
 
-   validate_monitor_identifier "${task}"
+   r_extended_identifier "${task}"
+   [ "${RVAL}" != "${task}" ] && fail "\"${task}\" is not a valid task identifier"
 
    [ -z "${filename}" ] && monitor::task::add_usage "missing filename"
 
@@ -886,13 +889,13 @@ monitor::task::add()
       redirect_exekutor "${plugin}" printf "%s\n" "${text}"
    else
       (
-         monitor::task::__require_filename "${task}" "${filename}"
+         monitor::task::require_filename "${task}" "${filename}"
       ) || exit 1
 
       mkdir_if_missing "${plugindir}"
       exekutor cp "${filename}" "${plugin}"
    fi
-   exekutor chmod -x "${plugin}"
+   exekutor chmod +x "${plugin}"
 }
 
 
@@ -900,15 +903,50 @@ monitor::task::create()
 {
    log_entry "monitor::task::create" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::create"
+   local OPTION_CALLBACK
+
+   while :
+   do
+      case "$1" in
+         -h*|--help|help)
+            monitor::task::create_usage
+         ;;
+
+         --callback)
+            OPTION_CALLBACK='YES'
+         ;;
+
+         -*)
+            monitor::task::create_usage "Unknown option \"$1\""
+         ;;
+
+         *)
+            break
+         ;;
+      esac
+
+      shift
+   done
 
    [ "$#" -lt 1 ] && monitor::task::create_usage
 
    local task="$1"; shift
 
-   validate_monitor_identifier "${task}"
+   r_extended_identifier "${task}"
+   [ "${RVAL}" != "${task}" ] && fail "\"${task}\" is not a valid task identifier"
 
-   monitor::task::emit_default "${task}" "$@" | monitor::task::add "${task}" "-"
+   if monitor::task::emit_default "${task}" "$@" | monitor::task::add "${task}" "-"
+   then
+      if [ "${OPTION_CALLBACK}" = 'YES' ]
+      then
+         include "monitor::callback"
+
+         monitor::callback::create "${task}"
+         return $?
+      fi
+   fi
+
+   return 1
 }
 
 
@@ -917,23 +955,24 @@ monitor::task::edit()
 {
    log_entry "monitor::task::edit" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::edit_usage"
+   monitor::task::cheap_help_options "monitor::task::edit_usage" "$@"
 
    [ "$#" -ne 1 ] && monitor::task::edit_usage
 
    local task="$1"
 
-   local _plugin
-   monitor::task::r_plugin_install_filename "${task}"
-   _plugin="${RVAL}"
+   local plugin
 
-   if [ ! -e "${_plugin}" ]
+   monitor::task::r_plugin_filename "${task}"
+   plugin="${RVAL}"
+
+   if [ ! -e "${plugin}" ]
    then
-      log_warning "\"${_plugin}\" does not exist."
+      log_warning "\"${plugin}\" does not exist."
       return 0
    fi
 
-   ${EDITOR:-vi} "${_plugin}"
+   ${EDITOR:-vi} "${plugin}"
 }
 
 
@@ -941,63 +980,64 @@ monitor::task::remove()
 {
    log_entry "monitor::task::remove" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::remove_usage"
+   monitor::task::cheap_help_options "monitor::task::remove_usage" "$@"
 
    [ "$#" -ne 1 ] && monitor::task::remove_usage
 
    local task="$1"
 
-   local _plugin
-   monitor::task::r_plugin_install_filename "${task}"
-   _plugin="${RVAL}"
+   local plugin
 
-   if [ ! -e "${_plugin}" ]
+   monitor::task::r_plugin_filename "${task}"
+   plugin="${RVAL}"
+
+   if [ ! -e "${plugin}" ]
    then
-      log_warning "\"${_plugin}\" does not exist."
+      log_warning "\"${plugin}\" does not exist."
       return 0
    fi
 
-   remove_file_if_present "${_plugin}"
+   remove_file_if_present "${plugin}"
 }
 
 
-monitor::task::_list()
-{
+# notice that this function always runs in a subshell
+monitor::task::do_list()
+(
    local directory="$1"
    local mode="$2"
 
-   (
-      rexekutor cd "${directory}" || exit 1
+   rexekutor cd "${directory}" || exit 1
 
-      local filename
+   local filename
 
-      shell_enable_nullglob
-      IFS=$'\n'
-      for filename in *-task.sh
-      do
-         case "${mode}" in
-            'output-name')
-               printf "   %s\n" "${filename%-task.sh}"
-               continue
-            ;;
+   shell_enable_nullglob
+   IFS=$'\n'
+   for filename in *-task.sh
+   do
+      case "${mode}" in
+         'output-name')
+            printf "   %s\n" "${filename%-task.sh}"
+            continue
+         ;;
 
-            'output-path')
-               printf "   %s/%s\n" "${directory#"${MULLE_USER_PWD}/"}" "${filename}"
-            ;;
+         'output-path')
+            printf "   %s/%s\n" "${directory#"${MULLE_USER_PWD}/"}" "${filename}"
+         ;;
 
-            'output-cat')
-               log_info "${C_RESET_BOLD}   ${filename%-task.sh}:"
-               sed -e '/^#/d' -e '/^$/d' -e 's/^/     /' "${filename}"
-               echo
-            ;;
+         'output-cat')
+            log_info "${C_RESET_BOLD}   ${filename%-task.sh}:"
+            sed -e '/^#/d' -e '/^$/d' -e 's/^/     /' "${filename}"
+            echo
+         ;;
 
-            *)
-               _internal_fail "unknown mode \"${mode}\""
-            ;;
-         esac
-      done
-   )
-}
+         *)
+            _internal_fail "unknown mode \"${mode}\""
+         ;;
+      esac
+   done
+)
+
 
 
 monitor::task::list()
@@ -1033,7 +1073,6 @@ monitor::task::list()
       shift
    done
 
-
    [ "$#" -ne 0 ] && monitor::task::list_usage
 
    if [ -d "${MULLE_MONITOR_ETC_DIR}/libexec" ]
@@ -1042,7 +1081,7 @@ monitor::task::list()
       log_verbose "User tasks override extension tasks of same name"
       log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#"${MULLE_USER_PWD}/"}/libexec"
 
-      monitor::task::_list "${MULLE_MONITOR_ETC_DIR}/libexec" "${OPTION_MODE}"
+      monitor::task::do_list "${MULLE_MONITOR_ETC_DIR}/libexec" "${OPTION_MODE}"
    fi
 
    if [ -d "${MULLE_MONITOR_SHARE_DIR}/libexec" ]
@@ -1050,7 +1089,7 @@ monitor::task::list()
       log_info "Extension Tasks"
       log_verbose "   ${C_RESET_BOLD}${MULLE_MONITOR_ETC_DIR#"${MULLE_USER_PWD}/"}/libexec"
 
-      monitor::task::_list "${MULLE_MONITOR_SHARE_DIR}/libexec" "${OPTION_MODE}"
+      monitor::task::do_list "${MULLE_MONITOR_SHARE_DIR}/libexec" "${OPTION_MODE}"
    fi
 }
 
@@ -1059,7 +1098,7 @@ monitor::task::test()
 {
    log_entry "monitor::task::test" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::test_usage"
+   monitor::task::cheap_help_options "monitor::task::test_usage" "$@"
 
    local task="$1"
 
@@ -1079,7 +1118,7 @@ monitor::task::status()
 {
    log_entry "monitor::task::status" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::status_usage"
+   monitor::task::cheap_help_options "monitor::task::status_usage" "$@"
 
    [ "$#" -lt 1 ] && monitor::task::status_usage
 
@@ -1113,7 +1152,7 @@ monitor::task::kill()
 {
    log_entry "monitor::task::kill" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::kill_usage"
+   monitor::task::cheap_help_options "monitor::task::kill_usage" "$@"
 
    [ "$#" -lt 1 ] && monitor::task::kill_usage
 
@@ -1154,18 +1193,18 @@ monitor::task::ps()
    if [ -d "${MULLE_MONITOR_VAR_DIR}/run/monitor" ]
    then
    (
-      cd "${MULLE_MONITOR_VAR_DIR}/run/monitor"
-      IFS=$'\n'
-      for pidfile in `ls -1 *-task.pid 2> /dev/null`
-      do
-         task="${pidfile%-task\.pid}"
+      .foreachline pidfile in `dir_list_files "${MULLE_MONITOR_VAR_DIR}/run/monitor" "*-task.pid"`
+      .do
+         r_basename "${pidfile}"
+         task="${RVAL%-task\.pid}"
+
          pid="`cat "${pidfile}"`"
          if [ "${pid}" = "$$" ]
          then
             pid=""
          fi
          printf "%s\n" "$pid" "${task}"
-      done
+      .done
    )
    fi
 }
@@ -1176,7 +1215,7 @@ monitor::task::locate()
 {
    log_entry "monitor::task::locate" "$@"
 
-   monitor::task::_cheap_help_options "monitor::task::run_usage"
+   monitor::task::cheap_help_options "monitor::task::locate_usage" "$@"
 
    [ "$#" -lt 1 ] && monitor::task::run_usage
 
@@ -1203,19 +1242,16 @@ monitor::task::main()
       . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-process.sh" || exit 1
    fi
 
-   monitor::task::_cheap_help_options "monitor::task::usage"
-
+   monitor::task::cheap_help_options "monitor::task::usage" "$@"
 
    local cmd="${1}"
+
    [ $# -ne 0 ] && shift
 
-   case "${cmd}" in
+   case "${cmd:-list}" in
       add|cat|create|edit|kill|list|locate|ps|run|status|test|remove)
          monitor::task::${cmd} "$@"
-      ;;
-
-      "")
-         monitor::task::usage
+         return $?
       ;;
 
       *)
