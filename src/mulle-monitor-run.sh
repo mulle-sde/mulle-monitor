@@ -685,7 +685,7 @@ monitor::run::main()
    include "monitor::callback"
    include "monitor::task"
 
-   MULLE_HOSTNAME="${MULLE_HOSTNAME:-`hostname -s`}"
+   MULLE_HOSTNAME="${MULLE_HOSTNAME:-`hostname`}" # -s not available on solaris
 
    mkdir_if_missing "${MULLE_MONITOR_VAR_DIR}"
    MONITOR_PIDFILE="${MULLE_MONITOR_VAR_DIR}/run/monitor-pid"

@@ -73,9 +73,17 @@ main()
 
    #-----------
 
-   expect_failure_mulle_monitor callback locate bar
+   # -x flag not useful on NTFS
+   case "${MULLE_UNAME}" in
+      'mingw'|'windows'|'msys')
+         log_verbose "----- #2 SKIPPED (WINDOWS) -----"
+      ;;
 
-   log_verbose "----- #2 PASSED -----"
+      *)
+         expect_failure_mulle_monitor callback locate bar
+         log_verbose "----- #2 PASSED -----"
+      ;;
+   esac
 
    #-----------
 
