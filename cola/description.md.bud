@@ -1,0 +1,9 @@
+**mulle-monitor** watches for the creation, deletion and updates of files
+in the working directory (and its sub-directories) using
+[fswatch](https://github.com/emcrisostomo/fswatch) or
+[inotifywait](https://linux.die.net/man/1/inotifywait). It then
+matches those filenames against a set of *patternfiles* to determine the
+appropriate executable to call.
+
+> In mulle-sde mulle-monitor is mainly just used for starting tasks. The
+> actual monitoring is rarely used.

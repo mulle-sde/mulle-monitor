@@ -1,26 +1,3 @@
-# 🕵🏻‍ Extensible filesystem observation with callbacks
-
-... for Android, BSDs, Linux, macOS, SunOS, Windows (MinGW, WSL)
-
-**mulle-monitor** watches for the creation, deletion and updates of files
-in the working directory (and its sub-directories) using
-[fswatch](https://github.com/emcrisostomo/fswatch) or
-[inotifywait](https://linux.die.net/man/1/inotifywait). It then
-matches those filenames against a set of *patternfiles* to determine the
-appropriate executable to call.
-
-> In mulle-sde mulle-monitor is mainly just used for starting tasks. The
-> actual monitoring is rarely used.
-
-| Release Version                                       | Release Notes
-|-------------------------------------------------------|--------------
-| ![Mulle kybernetiK tag](https://img.shields.io/github/tag/mulle-sde/mulle-monitor.svg?branch=release) | [RELEASENOTES](RELEASENOTES.md) |
-
-
-
-
-
-
 ## Commands
 
 ### mulle-monitor callback
@@ -181,33 +158,4 @@ List all *patternfiles*:
 ``` sh
 mulle-monitor patternfile list
 ```
-
-
-
-## You are here
-
-![](dox/mulle-monitor-overview.svg)
-
-
-
-## Install
-
-See [mulle-sde-developer](//github.com/mulle-sde/mulle-sde-developer) how to
-install mulle-sde, which will also install mulle-monitor with required
-dependencies.
-
-The command to install only the latest mulle-monitor into
-`/usr/local` (with **sudo**) is:
-
-``` bash
-curl -L 'https://github.com/mulle-sde/mulle-monitor/archive/latest.tar.gz' \
- | tar xfz - && cd 'mulle-monitor-latest' && sudo ./bin/installer /usr/local
-```
-
-
-
-## Author
-
-[Nat!](https://mulle-kybernetik.com/weblog) for Mulle kybernetiK
-
 

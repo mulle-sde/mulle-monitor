@@ -11,3 +11,6 @@ test/10-run-inotifywait/src/foo.sh
 tests/10-run-inotifywait/src/foo.sh
 .gitignore
 .mulle-make-build-dir
+cola/wilted/
+mulle-markdown-preview-*.html
+build-*/

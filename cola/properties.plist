@@ -1,0 +1,12 @@
+{
+   project =
+   {
+      description="🕵🏻‍ Extensible filesystem observation with callbacks";
+      domain="github";
+      name="mulle-monitor";
+      username="mulle-sde";
+      reponame="mulle-monitor";
+      homepage="https://github.com/mulle-sde/mulle-monitor";
+      license="BSD-3-Clause"
+   };
+}

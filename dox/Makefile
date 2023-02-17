@@ -1,11 +1,11 @@
 
-PIX=mulle-monitor-run.png \
-mulle-monitor-match.png \
-mulle-monitor-match-fs.png \
-mulle-monitor-overview.png \
+PIX=mulle-monitor-run.svg \
+mulle-monitor-match.svg \
+mulle-monitor-match-fs.svg \
+mulle-monitor-overview.svg \
 
-%.png: %.dot
-	dot -Tpng -o $*.png $<
+%.svg: %.dot
+	dot -Tsvg -o $*.svg $<
 
 
 all: $(PIX)
