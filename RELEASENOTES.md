@@ -1,3 +1,7 @@
+### 1.0.3
+
+* adapt to changes in mulle-match with respect to filters and qualifiers
+
 ### 1.0.2
 
 * fixed monitor back into usability for more than just a task starter
