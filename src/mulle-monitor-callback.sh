@@ -43,11 +43,11 @@ monitor::callback::usage()
 Usage:
    ${MULLE_USAGE_NAME} callback <command>
 
-   A callback is executed, when there has been an interesting change in the
-   filesystem. These changes are categorized by "patternfile"s and
-   are used to determine the callback to execute.
+   A callback is executed, when an interesting change in the filesystem has
+   been observed. The easiest and usually sufficient way to create a callback 
+   is with the \`create\` command.
 
-   A callback may return a string, which will be interpreted as a "task" to
+   A callback returns a string, which will be interpreted as a "task" to
    perform. See \`${MULLE_USAGE_NAME} task help\` and
    \`${MULLE_USAGE_NAME} patternfile help\` for more information.
 

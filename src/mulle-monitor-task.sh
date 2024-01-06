@@ -38,6 +38,7 @@ monitor::task::print_commands()
 
       SHOWN_COMMANDS="\
    add        : install a bash script as a task
+   create     : create a minimal task from command line arguments
    kill       : kill a running task
    list       : list installed tasks
    ps         : list running tasks
@@ -46,7 +47,6 @@ monitor::task::print_commands()
 
       HIDDEN_COMMANDS="\
    cat        : print the task script to stdout
-   create     : create a minimal example task
    edit       : edit a task script
    status     : get status of running or last ran task
    test       : load task and check that the required main function is present"
@@ -141,8 +141,8 @@ Usage:
    \`${MULLE_USAGE_NAME} task edit\`.
 
 Examples:
-   ${MULLE_USAGE_NAME} task create echo "Hello World"
-   ${MULLE_USAGE_NAME} task create ~/bin/my-script "whatever"
+   ${MULLE_USAGE_NAME} task create my-task echo "Hello World"
+   ${MULLE_USAGE_NAME} task create my-task ~/bin/my-script "whatever"
 
 Options:
    --callback : also create a callback with the same name
@@ -780,6 +780,7 @@ monitor::task::run()
    log_verbose "Execute task \"${functionname#"${MULLE_USER_PWD}/"}\""
 
    monitor::process::announce_current_pid "${taskpidfile}"
+
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
       exekutor "${functionname}" ${MULLE_MONITOR_TASK_FLAGS} "$@"
    rval=$?
