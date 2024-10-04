@@ -1,3 +1,7 @@
+### 1.0.4
+
+Various small improvements
+
 ### 1.0.3
 
 * adapt to changes in mulle-match with respect to filters and qualifiers

@@ -541,9 +541,9 @@ monitor::run::kill_monitor()
 }
 
 
-monitor::run::prevent_superflous_monitor()
+monitor::run::prevent_superfluous_monitor()
 {
-   log_entry "monitor::run::prevent_superflous_monitor" "$@"
+   log_entry "monitor::run::prevent_superfluous_monitor" "$@"
 
    if monitor::process::check_pid "${MONITOR_PIDFILE}"
    then
@@ -698,7 +698,7 @@ monitor::run::main()
       ;;
    esac
 
-   monitor::run::prevent_superflous_monitor
+   monitor::run::prevent_superfluous_monitor
 
    if [ "${OPTION_SYNCHRONOUS}" = 'NO' ]
    then
