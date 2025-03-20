@@ -270,7 +270,7 @@ monitor::callback::cheap_help_options()
 {
    local usage="$1" ; shift
 
-   while :
+   while [ $# -ne 0 ]
    do
       case "$1" in
          -h*|--help|help)
@@ -525,7 +525,7 @@ monitor::callback::list()
 
    local OPTION_MODE="output-name"
 
-   while :
+   while [ $# -ne 0 ]
    do
       case "$1" in
          -h*|--help|help)

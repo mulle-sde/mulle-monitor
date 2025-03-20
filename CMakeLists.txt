@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.15)
 
-project( mulle-monitor VERSION 1.0.4 LANGUAGES NONE)
+project( mulle-monitor VERSION 1.0.5 LANGUAGES NONE)
 
 execute_process( COMMAND ./mulle-monitor version
                  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

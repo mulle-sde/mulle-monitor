@@ -329,7 +329,7 @@ monitor::task::cheap_help_options()
 {
    local usage="$1" ; shift
 
-   while :
+   while [ $# -ne 0 ]
    do
       case "$1" in
          -h*|--help|help)
@@ -906,7 +906,7 @@ monitor::task::create()
 
    local OPTION_CALLBACK
 
-   while :
+   while [ $# -ne 0 ]
    do
       case "$1" in
          -h*|--help|help)
@@ -1047,7 +1047,7 @@ monitor::task::list()
 
    local OPTION_MODE="output-name"
 
-   while :
+   while [ $# -ne 0 ]
    do
       case "$1" in
          -h*|--help|help)
@@ -1250,7 +1250,8 @@ monitor::task::main()
    [ $# -ne 0 ] && shift
 
    case "${cmd:-list}" in
-      add|cat|create|edit|kill|list|locate|ps|run|status|test|remove)
+      add|cat|create|edit|kill|list|locate|ps|run|status|test|remove|rm)
+         cmd="${cmd/#rm/remove}"
          monitor::task::${cmd} "$@"
          return $?
       ;;

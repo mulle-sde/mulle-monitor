@@ -1,3 +1,7 @@
+### 1.0.5
+
+* allow rm as alias for remove
+
 ### 1.0.4
 
 Various small improvements
