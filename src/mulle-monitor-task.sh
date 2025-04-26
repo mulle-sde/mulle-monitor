@@ -106,10 +106,11 @@ Usage:
    as to read it from stdin. See task create for a quicker way to create
    simple tasks.
 
-   Your script should query the environment variable MULLE_FLAG_DRY_RUN and
-   conditionally execute/print statements like so:
+   Your script should query the environment variable
+   MULLE_FLAG_EXEKUTOR_DRY_RUN and conditionally execute/print statements
+   like so:
 
-      if [ "${MULLE_FLAG_DRY_RUN}" = 'YES' ]
+      if [ "${MULLE_FLAG_EXEKUTOR_DRY_RUN}" = 'YES' ]
       then
          echo 'git commit -m "xxx"' >&2
       else

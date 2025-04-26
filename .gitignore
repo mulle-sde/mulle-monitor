@@ -15,3 +15,5 @@ cola/wilted/
 mulle-markdown-preview-*.html
 build-*/
 .mulle/etc/project/publisher-info.sh
+*.bak
+.mulle/etc/make/build-dir
