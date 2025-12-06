@@ -52,6 +52,7 @@ fi
 
 SHOWN_COMMANDS="\
    callback       : manage callbacks
+   editor         : edit callbacks and tasks (needs node.js)
    patternfile    : manage patternfiles
    task           : manage tasks
    run            : monitor files and run scripts"
@@ -343,18 +344,18 @@ monitor::main()
    monitor::environment
 
    case "${cmd}" in
-      help)
+      'help')
          monitor::usage "${MULLE_TRACE}"
       ;;
 
-      callback)
+      'callback')
          # shellcheck source=src/mulle-monitor-callback.sh
          . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-callback.sh"
 
          monitor::callback::main "$@"
       ;;
 
-      clean|list|match|patternfile)
+      'clean'|'list'|'match'|'patternfile')
          MULLE_USAGE_NAME="${MULLE_USAGE_NAME}" \
             exekutor "${MULLE_MATCH:-mulle-match}" \
                            ${MULLE_TECHNICAL_FLAGS} \
@@ -362,30 +363,43 @@ monitor::main()
                            "$@"
       ;;
 
-      libexec-dir|library-path)
+      'editor')
+         exekutor npx mulle-sde/mulle-patternfile-editor
+         exekutor npx mulle-sde/mulle-monitor-editor
+      ;;
+
+      'patternfile-editor')
+         exekutor npx mulle-sde/mulle-patternfile-editor "$@"
+      ;;
+
+      'monitor-editor')
+         exekutor npx mulle-sde/mulle-monitor-editor "$@"
+      ;;
+
+      'libexec-dir'|'library-path')
          printf "%s\n" "${MULLE_MONITOR_LIBEXEC_DIR}"
       ;;
 
-      run)
+      'run')
          # shellcheck source=src/mulle-monitor-run.sh
          . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-run.sh"
 
          monitor::run::main "$@"
       ;;
 
-      task)
+      'task')
          # shellcheck source=src/mulle-monitor-task.sh
          . "${MULLE_MONITOR_LIBEXEC_DIR}/mulle-monitor-task.sh"
 
          monitor::task::main "$@"
       ;;
 
-      uname)
+      'uname')
          printf "%s\n" "${MULLE_UNAME}"
          return 0
       ;;
 
-      version)
+      'version')
          printf "%s\n" "${MULLE_EXECUTABLE_VERSION}"
          return 0
       ;;
