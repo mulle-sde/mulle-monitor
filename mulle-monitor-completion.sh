@@ -4,10 +4,10 @@ _mulle_monitor_complete() {
     _get_comp_words_by_ref -n : cur prev words cword
 
     # Global commands from main script case statement
-    cmds="callback clean help libexec-dir library-path list match patternfile run task uname version"
+    cmds="callback clean editor help libexec-dir library-path list match monitor-editor patternfile patternfile-editor run task uname version"
 
     # Global options from main script
-    options="-e --help -f --preempt --no-preempt --default-callback --sleep --version"
+    options="-e -f -h --help --version --preempt --no-preempt --default-callback --sleep"
 
     # Determine if we're choosing a command or handling a specific command
     if [[ ${cword} -eq 1 ]]; then
@@ -34,15 +34,29 @@ _mulle_monitor_complete() {
             # Passed to mulle-match, assume no completions
             COMPREPLY=()
             ;;
+        editor)
+            # Runs npx mulle-sde editors
+            COMPREPLY=()
+            ;;
+        monitor-editor)
+            # Runs npx mulle-sde/mulle-monitor-editor
+            COMPREPLY=()
+            ;;
+        patternfile-editor)
+            # Runs npx mulle-sde/mulle-patternfile-editor
+            COMPREPLY=()
+            ;;
         run)
             # Run command options from monitor::run::main
-            local run_options="-h --help -i --ignore -q --qualifier -p --pause --no-pause -s --synchronous --asynchronous -d --all --craft --prelude-task --coda-task"
+            local run_options="-h --help -a --all -d -i --ignore -q --qualifier -p --pause --no-pause -s --synchronous --asynchronous --craft --prelude-task --coda-task"
             if [[ "${cur}" == -* ]]; then
                 COMPREPLY=($(compgen -W "${run_options}" -- "$cur"))
-            elif [[ "${prev}" == "-d" ]] || [[ "${prev}" == "--directory" ]]; then
+            elif [[ "${prev}" == "-d" ]]; then
                 COMPREPLY=($(compgen -d -- "$cur"))  # Directory completion
             elif [[ "${prev}" == "-q" ]] || [[ "${prev}" == "--qualifier" ]]; then
                 COMPREPLY=()  # Free form
+            elif [[ "${prev}" == "--prelude-task" ]] || [[ "${prev}" == "--coda-task" ]]; then
+                COMPREPLY=()  # Task name
             else
                 # Positional: directories to monitor
                 COMPREPLY=($(compgen -d -- "$cur"))
@@ -50,7 +64,7 @@ _mulle_monitor_complete() {
             ;;
         callback)
             # Callback subcommands from monitor::callback::main
-            local callback_cmds="add cat create edit list remove run locate"
+            local callback_cmds="add cat create edit list locate remove run"
             if [[ ${cword} -eq 2 ]]; then
                 COMPREPLY=($(compgen -W "${callback_cmds}" -- "$cur"))
                 return 0
@@ -68,7 +82,7 @@ _mulle_monitor_complete() {
                         COMPREPLY=()
                     fi
                     ;;
-                add|create|edit|remove|cat|run)
+                add|cat|create|edit|locate|remove|run)
                     # These take a <name> argument, free form for simplicity
                     COMPREPLY=()
                     ;;
@@ -76,7 +90,7 @@ _mulle_monitor_complete() {
             ;;
         task)
             # Task subcommands from monitor::task::main
-            local task_cmds="add cat create edit kill list locate ps run status test remove"
+            local task_cmds="add cat create edit kill list locate ps remove rm run status test"
             if [[ ${cword} -eq 2 ]]; then
                 COMPREPLY=($(compgen -W "${task_cmds}" -- "$cur"))
                 return 0
@@ -106,7 +120,7 @@ _mulle_monitor_complete() {
                         COMPREPLY=()  # Task name and commands, free form
                     fi
                     ;;
-                edit|remove|run|cat|kill|status|test|locate)
+                cat|edit|kill|locate|remove|rm|run|status|test)
                     # Take <task>, free form
                     COMPREPLY=()
                     ;;
