@@ -720,7 +720,7 @@ monitor::run::main()
    then
       include "match::environment"
 
-      match::environment::init "${MULLE_MONITOR_PROJECT_DIR}"
+      match::environment::init
 
       include "match::filename"
    fi
