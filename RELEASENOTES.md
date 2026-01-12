@@ -1,3 +1,15 @@
+## 1.1.0
+
+
+* corrected GitHub tag badge to remove incorrect branch parameter
+
+
+
+* add editor command for as of yet unreleased editors
+
+* need to update `cmake_minimum_required` because cmake has a weird concept of min required
+
+
 ### 1.0.5
 
 * allow rm as alias for remove
