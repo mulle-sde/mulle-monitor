@@ -543,19 +543,19 @@ monitor::task::remember_rval()
    log_entry "monitor::task::remember_rval" "$@"
 
    local task="$1"
-   local rval="$2"
+   local rc="$2"
 
    local taskdonefile
    local taskstatus
 
    taskstatus="failed"
-   case "${rval}" in
+   case "${rc}" in
       0)
          taskstatus="done"
       ;;
 
       "")
-         _internal_fail "rval is empty"
+         _internal_fail "rc is empty"
       ;;
    esac
 
@@ -623,20 +623,20 @@ monitor::task::add_job_sync()
    # depending on the setup, we may now want to hide the current pid
    # so it doesn't get killed (need a locking scheme ?)
    #
-   log_verbose "Execute task \"${1#"${MULLE_USER_PWD}/"}\""
+   log_fluff "Execute task \"${1#"${MULLE_USER_PWD}/"}\""
 
 
    log_fluff "==> Starting${modifier}task"
 
-   local rval
+   local rc
 
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
       eval_exekutor "$@"
-   rval=$?
+   rc=$?
 
-   monitor::task::remember_rval "${task}" "${rval}"
+   monitor::task::remember_rval "${task}" "${rc}"
 
-   log_fluff "==> Ended task ($rval)"
+   log_fluff "==> Ended task ($rc)"
 
    monitor::process::done_pid "${taskpidfile}"
 }
@@ -776,20 +776,20 @@ monitor::task::run()
 
    monitor::process::kill_pid "${taskpidfile}"
 
-   local rval
+   local rc
 
-   log_verbose "Execute task \"${functionname#"${MULLE_USER_PWD}/"}\""
+   log_fluff "Execute task \"${functionname#"${MULLE_USER_PWD}/"}\""
 
    monitor::process::announce_current_pid "${taskpidfile}"
 
    PATH="${MULLE_MONITOR_SHARE_DIR}/bin:${MULLE_MONITOR_SHARE_DIR}/bin:${PATH}" \
       exekutor "${functionname}" ${MULLE_MONITOR_TASK_FLAGS} "$@"
-   rval=$?
+   rc=$?
 
-   monitor::task::remember_rval "${task}" "${rval}"
+   monitor::task::remember_rval "${task}" "${rc}"
    monitor::process::done_pid "${taskpidfile}"
 
-   return $rval
+   return $rc
 }
 
 

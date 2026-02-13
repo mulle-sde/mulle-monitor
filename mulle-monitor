@@ -339,8 +339,6 @@ monitor::main()
       log_fluff "mulle-monitor sets MULLE_VIRTUAL_ROOT to \"${MULLE_VIRTUAL_ROOT}\""
    fi
 
-   local rval
-
    monitor::environment
 
    case "${cmd}" in

@@ -458,7 +458,7 @@ monitor::callback::run()
    fi
    executable="${RVAL}"
 
-   log_verbose "Execute callback \"${executable#"${MULLE_USER_PWD}/"}\""
+   log_fluff "Execute callback \"${executable#"${MULLE_USER_PWD}/"}\""
 
    case "${executable}" in
       echo\ *)
@@ -467,17 +467,17 @@ monitor::callback::run()
       ;;
    esac
 
-   local rval 
+   local rc
 
    MULLE_BASHFUNCTIONS_LIBEXEC_DIR="${MULLE_BASHFUNCTIONS_LIBEXEC_DIR}" \
       exekutor "${executable}" ${MULLE_MONITOR_CALLBACK_FLAGS} "$@"
-   rval=$?
+   rc=$?
 
-   if [ $rval -ne 0 ]
+   if [ $rc -ne 0 ]
    then
       log_error "${executable} ${MULLE_MONITOR_CALLBACK_FLAGS} $* failed"
    fi
-   return $rval
+   return $rc
 }
 
 

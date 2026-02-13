@@ -263,25 +263,25 @@ monitor::run::run_tasks_synchronously()
 
    local tasks="$1"
 
-   local rval
+   local rc
    local task
 
-   rval=0
+   rc=0
 
    .for task in ${tasks}
    .do
       log_verbose "Task ${C_MAGENTA}${C_BOLD}${task}"
 
       monitor::task::run "'${task}'"
-      rval=$?
+      rc=$?
 
-      if [ "${rval}" -ne 0 ]
+      if [ "${rc}" -ne 0 ]
       then
          .break
       fi
    .done
 
-   return $rval
+   return $rc
 }
 
 monitor::run::run_tasks_async()
@@ -311,17 +311,17 @@ monitor::run::callback_and_task()
    local category="$4"
 
    local tasks
-   local rval
+   local rc
 
    tasks="`monitor::callback::run "${callback}" \
                                   "${action}" \
                                   "${filepath}" \
                                   "${category}"`"
-   rval=$?
+   rc=$?
 
-   if [ $rval -ne 0 -o -z "${tasks}" ]
+   if [ $rc -ne 0 -o -z "${tasks}" ]
    then
-      return $rval
+      return $rc
    fi
 
    if [ "${tasks}" = "echo" ]
