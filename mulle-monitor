@@ -335,6 +335,9 @@ monitor::main()
    if [ -z "${MULLE_VIRTUAL_ROOT}" ]
    then
       MULLE_VIRTUAL_ROOT="`pwd -P`"
+      MULLE_VIRTUAL_ROOT_ID="$(PATH='/bin:/usr/bin:/usr/local/bin' shasum -a 256 <<< "${MULLE_VIRTUAL_ROOT}")"
+      MULLE_VIRTUAL_ROOT_ID="${MULLE_VIRTUAL_ROOT_ID:1:12}"
+
       [ "${MULLE_VIRTUAL_ROOT}" = "/" ] && fail "MULLE_VIRTUAL_ROOT must not be /"
       log_fluff "mulle-monitor sets MULLE_VIRTUAL_ROOT to \"${MULLE_VIRTUAL_ROOT}\""
    fi
