@@ -1,5 +1,7 @@
 _mulle_monitor_complete() {
     local cur prev words cword cmds subcmds options
+    local subcmd
+    local list_opts
 
     _get_comp_words_by_ref -n : cur prev words cword
 
@@ -69,13 +71,13 @@ _mulle_monitor_complete() {
                 COMPREPLY=($(compgen -W "${callback_cmds}" -- "$cur"))
                 return 0
             fi
-            local subcmd=${words[2]}
+            subcmd=${words[2]}
             case ${subcmd} in
                 help|--help|-h)
                     COMPREPLY=()
                     ;;
                 list)
-                    local list_opts="--output-name --output-path --cat"
+                    list_opts="--output-name --output-path --cat"
                     if [[ "${cur}" == -* ]]; then
                         COMPREPLY=($(compgen -W "${list_opts}" -- "$cur"))
                     else
@@ -95,13 +97,13 @@ _mulle_monitor_complete() {
                 COMPREPLY=($(compgen -W "${task_cmds}" -- "$cur"))
                 return 0
             fi
-            local subcmd=${words[2]}
+            subcmd=${words[2]}
             case ${subcmd} in
                 help|--help|-h)
                     COMPREPLY=()
                     ;;
                 list)
-                    local list_opts="--output-name --output-path --cat"
+                    list_opts="--output-name --output-path --cat"
                     if [[ "${cur}" == -* ]]; then
                         COMPREPLY=($(compgen -W "${list_opts}" -- "$cur"))
                     else
